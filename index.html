@@ -3750,8 +3750,16 @@ async function sbProvisionAdminAuth(){
     const signIn = await window.__sbClient.auth.signInWithPassword({ email: SB_ADMIN_EMAIL, password: SB_ADMIN_PASS });
     if(!signIn.error) return;
     const signUp = await window.__sbClient.auth.signUp({ email: SB_ADMIN_EMAIL, password: SB_ADMIN_PASS });
-    if(signUp.error){ console.error('Admin Supabase auth provisioning failed:', signUp.error.message); }
-  }catch(e){ console.error('Admin Supabase auth provisioning error:', e); }
+    if(signUp.error){
+      alert('Could not set up the admin database login: '+signUp.error.message+'\n\nAdmin dashboard access still works, but customer/shipment data may not load until this is fixed.');
+      console.error('Admin Supabase auth provisioning failed:', signUp.error.message);
+    } else if(signUp.data && !signUp.data.session){
+      alert('Admin account was created in Supabase, but it needs email confirmation before it can log in there. In Supabase: Authentication -> Providers -> Email -> turn OFF "Confirm email", then log out and log back in here once.');
+    }
+  }catch(e){
+    alert('Could not reach Supabase to set up the admin login: '+(e&&e.message?e.message:e));
+    console.error('Admin Supabase auth provisioning error:', e);
+  }
 }
 function showForcePasswordChange(user){
   document.getElementById('modalRoot').innerHTML =
