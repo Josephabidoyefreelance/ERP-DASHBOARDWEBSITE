@@ -4295,15 +4295,17 @@ async function init(){
   buildSidebar();
   buildSectionShells();
   await loadAll();
-  await maybeSeedDemoData();
   await migrateLegacyIds();
-  await maybeSeedDemoLeads();
-  await maybeSeedKnowledgeBase();
-  await maybeSeedDemoManifests();
-  await maybeSeedDemoPayroll();
-  await maybeSeedDemoCareers();
-  await maybeSeedDemoUsers();
-  await maybeSeedDemoTruckListings();
+  if(!window.__usingSupabase){
+    await maybeSeedDemoData();
+    await maybeSeedDemoLeads();
+    await maybeSeedKnowledgeBase();
+    await maybeSeedDemoManifests();
+    await maybeSeedDemoPayroll();
+    await maybeSeedDemoCareers();
+    await maybeSeedDemoUsers();
+    await maybeSeedDemoTruckListings();
+  }
   await authPromise;
   buildSidebar();
   document.getElementById('sideFoot').textContent = DATA.settings.companyName || 'Jaad Logistics';
