@@ -3881,7 +3881,7 @@ async function tryLogin(){
   const { data, error } = await window.__sbClient.auth.signInWithPassword(signInPayload);
   CAPTCHA_TOKEN = '';
   try{ if(window.turnstile) window.turnstile.reset(); }catch(e){}
-  if(error){ errEl.textContent = 'Incorrect email or password.'; return; }
+  if(error){ errEl.textContent = error.message || 'Sign in failed. Please try again.'; return; }
   await completeLogin('Admin', data && data.user ? data.user.id : null);
 }
 function showForcePasswordChange(user){
