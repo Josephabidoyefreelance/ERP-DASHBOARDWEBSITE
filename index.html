@@ -4357,8 +4357,13 @@ async function init(){
     const overdueCount = DATA.invoices.filter(i=>invoiceEffectiveStatus(i)==='Overdue').length;
     if(overdueCount>0) speakAnnouncement('You have '+overdueCount+' overdue invoice'+(overdueCount===1?'':'s')+'.');
   }, 1500);
-  const startSection = (location.hash||'').replace('#','');
-  goTo(NAV_ITEMS.some(n=>n.key===startSection) ? startSection : 'dashboard');
+  const isAuthenticatedView = document.getElementById('loginGate').style.display==='none'
+    && document.getElementById('setPasswordGate').style.display==='none'
+    && document.getElementById('appRoot').style.display!=='none';
+  if(isAuthenticatedView){
+    const startSection = (location.hash||'').replace('#','');
+    goTo(NAV_ITEMS.some(n=>n.key===startSection) ? startSection : 'dashboard');
+  }
 }
 const FREIGHT_RATES = {
   'Trucks / Haulage': {base:50000, perTon:15000},
