@@ -3742,7 +3742,7 @@ async function tryLogin(){
   }catch(e){}
   document.getElementById('loginErr').textContent = 'Incorrect user ID or password, or this account is disabled.';
 }
-const SB_ADMIN_EMAIL = 'admin@jaadlogistics.internal';
+const SB_ADMIN_EMAIL = 'admin@jaadlogistics-erp.com';
 const SB_ADMIN_PASS = 'JaadERP-supabase-2026';
 async function sbProvisionAdminAuth(){
   if(!window.__usingSupabase || !window.__sbClient) return;
