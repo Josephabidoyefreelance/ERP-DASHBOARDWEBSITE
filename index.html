@@ -696,10 +696,10 @@
   .pub-acct-wallet-balance{background:#0B0B0D;color:#fff;border-radius:14px;padding:20px 22px;}
   .pub-acct-wallet-balance .lbl{font-size:10.5px;font-weight:800;letter-spacing:.5px;color:#8A8D96;text-transform:uppercase;margin-bottom:8px;}
   .pub-acct-wallet-balance .val{font-size:26px;font-weight:800;color:#ff5a52;}
-  #pubChatFab{position:fixed;bottom:110px;right:22px;width:56px;height:56px;border-radius:50%;background:var(--red,#c0201c);color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.3);z-index:400;}
+  #pubChatFab{position:fixed;bottom:24px;right:22px;width:56px;height:56px;border-radius:50%;background:var(--red,#c0201c);color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.3);z-index:400;}
   #pubChatFab.has-unread::after{content:'';position:absolute;top:2px;right:2px;width:14px;height:14px;border-radius:50%;background:#FFC400;border:2px solid #fff;animation:fabPulse 1.4s infinite;}
   @keyframes fabPulse{0%{box-shadow:0 0 0 0 rgba(255,196,0,.6);}70%{box-shadow:0 0 0 8px rgba(255,196,0,0);}100%{box-shadow:0 0 0 0 rgba(255,196,0,0);}}
-  #pubChatPanel{position:fixed;bottom:150px;right:22px;width:400px;max-width:calc(100vw - 32px);height:560px;max-height:70vh;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.35);z-index:400;display:flex;flex-direction:column;overflow:hidden;}
+  #pubChatPanel{position:fixed;bottom:64px;right:22px;width:400px;max-width:calc(100vw - 32px);height:560px;max-height:70vh;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.35);z-index:400;display:flex;flex-direction:column;overflow:hidden;}
   .pub-chat-head{background:#000;color:#fff;padding:8px 14px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center;}
   .pub-chat-head-brand{display:flex;align-items:center;}
   .pub-chat-head-brand img{height:34px;width:auto;object-fit:contain;}
@@ -761,6 +761,7 @@
   }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
 <div id="publicSite">
@@ -1085,10 +1086,23 @@
     <h2>Sign in</h2>
     <p>Jaad Logistics operations dashboard</p>
     </div>
-    <div class="field"><label>User ID</label><input type="text" id="loginUser" autocomplete="username"></div>
+    <div class="field"><label>Email</label><input type="email" id="loginUser" autocomplete="email"></div>
     <div class="field"><label>Password</label><input type="password" id="loginPass" autocomplete="current-password"></div>
+    <div style="margin:14px 0;display:flex;justify-content:center;"><div class="cf-turnstile" data-sitekey="0x4AAAAAAAEDihhWFPAg1nGQG" data-callback="onTurnstileVerified" data-expired-callback="onTurnstileExpired"></div></div>
     <div class="login-err" id="loginErr"></div>
     <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="tryLogin()">Sign in</button>
+  </div>
+</div>
+<div id="setPasswordGate" style="display:none;">
+  <div class="login-card">
+    <div class="login-head">
+      <h2>Set your password</h2>
+      <p>Choose a password only you know. This finishes setting up your account.</p>
+    </div>
+    <div class="field"><label>New password</label><input type="password" id="newAcctPass1" autocomplete="new-password"></div>
+    <div class="field"><label>Confirm password</label><input type="password" id="newAcctPass2" autocomplete="new-password"></div>
+    <div class="login-err" id="newAcctPassErr"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="submitNewAccountPassword()">Save and sign in</button>
   </div>
 </div>
 <div class="app" id="appRoot" style="display:none;">
@@ -2321,22 +2335,12 @@ function navGroupClick(key, hasChildren){
 function setActiveNav(key){ document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.nav===key)); }
 function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('mobileOverlay').classList.add('show'); }
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('mobileOverlay').classList.remove('show'); }
-let usersUnlocked = false;
+let usersUnlocked = true;
 async function checkUsersAccess(){
-  if(usersUnlocked) return true;
-  try{
-    const r = await window.storage.get('jaad_users_unlocked', false);
-    if(r && r.value==='1'){ usersUnlocked = true; return true; }
-  }catch(e){}
-  const pass = await customPrompt('This section is admin only. Enter the master password.', true);
-  if(pass===null) return false;
-  if(pass===LOGIN_PASS || pass===LOGIN_PASS_ALT){
-    usersUnlocked = true;
-    try{ await window.storage.set('jaad_users_unlocked','1', false); }catch(e){}
-    return true;
-  }
-  toast('Incorrect master password.', 'error');
-  return false;
+  /* Previously re-checked a second hardcoded password here. Being in
+     the dashboard at all now means you passed a real Supabase login,
+     so no extra local password is needed for this section. */
+  return true;
 }
 async function goTo(section){
   if(!hasAccessToSection(section)){
@@ -2837,26 +2841,16 @@ function openForm(section, id){
 }
 function unlockAmountField(btn){
   const row = btn.parentElement;
-  row.innerHTML = '<input type="password" id="unlockPassInput" placeholder="Admin password" style="width:150px;display:inline-block;background:var(--surface);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px;margin-right:6px;">'+
-    '<button type="button" class="btn btn-ghost btn-sm" onclick="submitUnlockAmount(this)">Unlock</button>';
-  const inp = document.getElementById('unlockPassInput');
-  inp.focus();
-  inp.addEventListener('keydown', e=>{ if(e.key==='Enter') submitUnlockAmount(e.target.nextElementSibling); });
+  row.innerHTML = '<button type="button" class="btn btn-ghost btn-sm" onclick="submitUnlockAmount(this)">Confirm unlock</button>';
 }
 function submitUnlockAmount(goBtn){
   const row = goBtn.parentElement;
-  const passInput = document.getElementById('unlockPassInput');
-  const pass = passInput.value;
-  if(pass===LOGIN_PASS){
-    const field = row.parentElement;
-    const input = field.querySelector('input[type=number]');
-    input.disabled = false;
-    input.focus();
-    row.remove();
-    toast('Amount unlocked for this edit.', 'success');
-  } else {
-    toast('Incorrect admin password.', 'error');
-  }
+  const field = row.parentElement;
+  const input = field.querySelector('input[type=number]');
+  input.disabled = false;
+  input.focus();
+  row.remove();
+  toast('Amount unlocked for this edit.', 'success');
 }
 function closeModal(){ document.getElementById('modalRoot').innerHTML=''; }
 
@@ -3681,12 +3675,16 @@ async function toggleTheme(){
    the password below or skip this check entirely. This is a deterrent
    against casual link-sharing, not real security. Real security needs
    the backend to enforce it server-side. */
-const LOGIN_USER = 'JaadERP';
-const LOGIN_PASS = 'JaadERP';
-const LOGIN_USER_ALT = 'Jaadadmin';
-const LOGIN_PASS_ALT = 'Jaadadmin';
+/* Login goes through Supabase Auth now. No passwords live in this file.
+   Staff accounts are created in Supabase (Authentication -> Users ->
+   Send invitation); each person sets their own password when they
+   accept the invite. CAPTCHA and email confirmation are enforced by
+   Supabase itself, not by this script. */
 let CURRENT_USER_ROLE = 'Admin';
 let CURRENT_USER_ID = null;
+let CAPTCHA_TOKEN = '';
+function onTurnstileVerified(token){ CAPTCHA_TOKEN = token; }
+function onTurnstileExpired(){ CAPTCHA_TOKEN = ''; }
 function setPubChatWidgetVisible(visible){
   const fab = document.getElementById('pubChatFab');
   const panel = document.getElementById('pubChatPanel');
@@ -3699,18 +3697,54 @@ function showAdminLogin(){
   document.getElementById('loginGate').style.display = 'flex';
   setPubChatWidgetVisible(false);
 }
-async function checkAuth(){
+function showSetPasswordScreen(){
+  document.getElementById('publicSite').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'flex';
+  document.getElementById('loginGate').style.display = 'none';
+  document.getElementById('setPasswordGate').style.display = 'flex';
+  setPubChatWidgetVisible(false);
+}
+/* Runs once on page load. If this page was opened from a Supabase invite
+   or password-reset email, the URL contains a token in the # part of the
+   address. The Supabase client picks that up automatically and creates a
+   session from it; we just check for that and, if found, send the person
+   to the "set your password" screen instead of the normal login form. */
+async function handleAuthRedirect(){
+  if(!window.__usingSupabase || !window.__sbClient) return;
+  const hash = window.location.hash || '';
+  if(hash.indexOf('type=invite')===-1 && hash.indexOf('type=recovery')===-1) return;
+  await new Promise(r=>setTimeout(r, 400));
   try{
-    const r = await window.storage.get('jaad_auth_ok', false);
-    if(r && r.value==='1'){
+    const { data } = await window.__sbClient.auth.getSession();
+    if(data && data.session) showSetPasswordScreen();
+  }catch(e){}
+}
+async function submitNewAccountPassword(){
+  const p1 = document.getElementById('newAcctPass1').value;
+  const p2 = document.getElementById('newAcctPass2').value;
+  const errEl = document.getElementById('newAcctPassErr');
+  errEl.textContent = '';
+  if(!p1 || p1.length<8){ errEl.textContent = 'Use at least 8 characters.'; return; }
+  if(p1!==p2){ errEl.textContent = 'Passwords do not match.'; return; }
+  const { data, error } = await window.__sbClient.auth.updateUser({ password: p1 });
+  if(error){ errEl.textContent = error.message; return; }
+  try{ history.replaceState(null, '', window.location.pathname + window.location.search); }catch(e){}
+  document.getElementById('setPasswordGate').style.display = 'none';
+  await completeLogin('Admin', data && data.user ? data.user.id : null);
+  toast('Password set. You are signed in.', 'success');
+}
+async function checkAuth(){
+  await handleAuthRedirect();
+  try{
+    if(!window.__usingSupabase || !window.__sbClient) return;
+    const { data } = await window.__sbClient.auth.getSession();
+    if(data && data.session){
       document.getElementById('publicSite').style.display='none';
       document.getElementById('appRoot').style.display='flex';
       document.getElementById('loginGate').style.display='none';
       setPubChatWidgetVisible(false);
-      const rr = await window.storage.get('jaad_auth_role', false);
-      if(rr && rr.value) CURRENT_USER_ROLE = rr.value;
-      const ru = await window.storage.get('jaad_auth_userid', false);
-      if(ru && ru.value) CURRENT_USER_ID = ru.value;
+      CURRENT_USER_ROLE = 'Admin';
+      CURRENT_USER_ID = data.session.user.id;
     }
   }catch(e){ /* leave the public site showing */ }
 }
@@ -3718,13 +3752,12 @@ async function logout(){
   usersUnlocked = false;
   CURRENT_USER_ROLE = 'Admin';
   CURRENT_USER_ID = null;
-  try{
-    await window.storage.set('jaad_auth_ok','0', false);
-    await window.storage.set('jaad_users_unlocked','0', false);
-  }catch(e){}
+  try{ if(window.__sbClient) await window.__sbClient.auth.signOut(); }catch(e){}
   document.getElementById('loginUser').value = '';
   document.getElementById('loginPass').value = '';
   document.getElementById('loginErr').textContent = '';
+  CAPTCHA_TOKEN = '';
+  try{ if(window.turnstile) window.turnstile.reset(); }catch(e){}
   try{
     if(window.parent && window.parent !== window && typeof window.parent.showPage === 'function'){
       window.parent.showPage('home');
@@ -3742,51 +3775,22 @@ async function completeLogin(role, userId){
   document.getElementById('loginGate').style.display='none';
   buildSidebar();
   if(!hasAccessToSection(CURRENT_SECTION)) goTo('dashboard');
-  try{
-    await window.storage.set('jaad_auth_ok','1', false);
-    await window.storage.set('jaad_auth_role', role, false);
-    await window.storage.set('jaad_auth_userid', userId||'', false);
-  }catch(e){}
 }
 async function tryLogin(){
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value.trim();
-  if((u.toLowerCase()===LOGIN_USER.toLowerCase() && p===LOGIN_PASS) || (u.toLowerCase()===LOGIN_USER_ALT.toLowerCase() && p===LOGIN_PASS_ALT)){
-    await sbProvisionAdminAuth();
-    await completeLogin('Admin', null);
-    return;
-  }
-  try{
-    const r = await window.storage.get('jaad_users', true);
-    const users = r&&r.value ? JSON.parse(r.value) : [];
-    const match = users.find(x=>x.username===u && x.password===p && x.enabled==='Yes');
-    if(match){
-      if(match.mustChangePassword==='Yes'){ showForcePasswordChange(match); return; }
-      await sbProvisionAdminAuth();
-      await completeLogin(match.role, match.id);
-      return;
-    }
-  }catch(e){}
-  document.getElementById('loginErr').textContent = 'Incorrect user ID or password, or this account is disabled.';
-}
-const SB_ADMIN_EMAIL = 'admin@jaadlogistics-erp.com';
-const SB_ADMIN_PASS = 'JaadERP-supabase-2026';
-async function sbProvisionAdminAuth(){
-  if(!window.__usingSupabase || !window.__sbClient) return;
-  try{
-    const signIn = await window.__sbClient.auth.signInWithPassword({ email: SB_ADMIN_EMAIL, password: SB_ADMIN_PASS });
-    if(!signIn.error) return;
-    const signUp = await window.__sbClient.auth.signUp({ email: SB_ADMIN_EMAIL, password: SB_ADMIN_PASS });
-    if(signUp.error){
-      alert('Could not set up the admin database login: '+signUp.error.message+'\n\nAdmin dashboard access still works, but customer/shipment data may not load until this is fixed.');
-      console.error('Admin Supabase auth provisioning failed:', signUp.error.message);
-    } else if(signUp.data && !signUp.data.session){
-      alert('Admin account was created in Supabase, but it needs email confirmation before it can log in there. In Supabase: Authentication -> Providers -> Email -> turn OFF "Confirm email", then log out and log back in here once.');
-    }
-  }catch(e){
-    alert('Could not reach Supabase to set up the admin login: '+(e&&e.message?e.message:e));
-    console.error('Admin Supabase auth provisioning error:', e);
-  }
+  const errEl = document.getElementById('loginErr');
+  errEl.textContent = '';
+  if(!u || !p){ errEl.textContent = 'Enter your email and password.'; return; }
+  if(!CAPTCHA_TOKEN){ errEl.textContent = 'Please complete the security check above.'; return; }
+  if(!window.__usingSupabase || !window.__sbClient){ errEl.textContent = 'Cannot reach the login service right now.'; return; }
+  const { data, error } = await window.__sbClient.auth.signInWithPassword({
+    email: u, password: p, options: { captchaToken: CAPTCHA_TOKEN }
+  });
+  CAPTCHA_TOKEN = '';
+  try{ if(window.turnstile) window.turnstile.reset(); }catch(e){}
+  if(error){ errEl.textContent = 'Incorrect email or password.'; return; }
+  await completeLogin('Admin', data && data.user ? data.user.id : null);
 }
 function showForcePasswordChange(user){
   document.getElementById('modalRoot').innerHTML =
@@ -4991,10 +4995,6 @@ async function pubCustomerLogin(){
   const pass = (document.getElementById('accLoginPass').value||'').trim();
   const remember = document.getElementById('rememberMeChk') ? document.getElementById('rememberMeChk').checked : true;
   const msgEl = document.getElementById('accMsg');
-  if((rawEmail.toLowerCase()===LOGIN_USER.toLowerCase() && pass===LOGIN_PASS) || (rawEmail.toLowerCase()===LOGIN_USER_ALT.toLowerCase() && pass===LOGIN_PASS_ALT)){
-    msgEl.innerHTML = '<p style="color:var(--red);font-size:12.5px;margin-top:8px;">Incorrect email or password.</p>';
-    return;
-  }
   const accounts = await pubGetCustomerAccounts();
   const account = accounts.find(a=>a.email===email);
   if(window.__usingSupabase && account && (account.accType==='customer' || account.accType==='truckOwner')){
