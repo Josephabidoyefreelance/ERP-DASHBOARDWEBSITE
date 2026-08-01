@@ -1154,6 +1154,8 @@ if(!window.storage){
   const _sb = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   window.__sbClient = _sb;
   window.__usingSupabase = !!_sb;
+  window.__sbFunctionsUrl = SUPABASE_URL + '/functions/v1';
+  window.__sbAnonKey = SUPABASE_ANON_KEY;
   window.storage = {
     async get(key, shared){
       if(!shared || !_sb){
@@ -1301,6 +1303,23 @@ async function sbSaveJsonTable(table, rows, ownerField, ownerColumn){
   const { error } = await window.__sbClient.from(table).upsert(payload);
   if(error){ toast('Could not save '+table+': '+error.message, 'error'); return false; }
   return true;
+}
+/* Calls the real backend (a Supabase Edge Function) to send an actual email.
+   This never runs in the customer's browser directly against Resend — the
+   Edge Function does that server-side, keeping the Resend key hidden.
+   If it fails (function not deployed yet, no internet, etc.) we log it and
+   move on — a notification email failing should never block the shipment,
+   invoice, or booking action itself from completing. */
+async function sendNotification(type, to, data){
+  if(!window.__usingSupabase || !window.__sbFunctionsUrl || !to) return;
+  try{
+    const res = await fetch(window.__sbFunctionsUrl + '/send-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + window.__sbAnonKey },
+      body: JSON.stringify({ type, to, data })
+    });
+    if(!res.ok){ const errBody = await res.text(); console.warn('Notification email failed:', type, errBody); }
+  }catch(e){ console.warn('Notification email error:', type, e); }
 }
 async function loadAll(){
   for(const k of STORE_KEYS){
@@ -1819,11 +1838,15 @@ function quickUpdateStatus(section, id, newValue, fieldKey){
       if(oldDriverId){ const od=driverById(oldDriverId); if(od) od.status='Available'; }
     }
     if(cfg.onSave) cfg.onSave(item);
+    const cust = DATA.customers.find(c=>c.id===item.customerId);
+    if(cust && cust.email) sendNotification('status_changed', cust.email, { customerName: cust.name, shipmentId: item.id, status: newValue });
   }
   renderSection(section);
   toast(fieldKey.charAt(0).toUpperCase()+fieldKey.slice(1)+' updated.', 'success');
   if(section==='invoices' && fieldKey==='status'){
     pushNotification('invoice', 'Invoice '+item.id+' status changed to '+newValue+'.');
+    const invCust = DATA.customers.find(c=>c.id===item.client);
+    if(newValue==='Paid' && invCust && invCust.email){ sendNotification('invoice_paid', invCust.email, { customerName: invCust.name, invoiceId: item.id, amountFormatted: fmtMoney(item.amount) }); }
     if(newValue==='Paid' && item.shipmentId){
       const ship = DATA.shipments.find(s=>s.id===item.shipmentId);
       if(ship && ship.status==='Pending'){ ship.status='Assigned'; debitWalletForShipment(ship); persist('shipments'); toast('Payment confirmed \u2014 shipment '+ship.id+' moved to Assigned.', 'success'); }
@@ -3269,6 +3292,10 @@ async function saveForm(section, id){
   if(section==='expenses' && !existing){
     pushNotification('expense', 'New expense logged: '+item.description+' ('+fmtMoney(item.amount)+').');
   }
+  if(section==='invoices' && !existing){
+    const cust = DATA.customers.find(c=>c.id===item.client);
+    if(cust && cust.email) sendNotification('invoice_created', cust.email, { customerName: cust.name, invoiceId: item.id, amountFormatted: fmtMoney(item.amount), dueDate: item.dueDate||'' });
+  }
 }
 async function deleteEntity(section, id){
   const cfg = ENTITY[section];
@@ -4475,6 +4502,7 @@ async function pubBookShipment(){
   DATA.shipments.push(shipment);
   await persist('shipments');
   notifyNewShipment(newId);
+  sendNotification('shipment_booked', cust.email, { customerName: cust.name, shipmentId: newId, origin: shipDef.origin, destination: shipDef.destination });
   PUB_FLASH_MSG = 'Booking sent! Your tracking number is '+newId+'.';
   await pubGoTo('account');
 }
