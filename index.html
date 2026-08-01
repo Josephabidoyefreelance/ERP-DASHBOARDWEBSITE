@@ -3710,14 +3710,15 @@ function showSetPasswordScreen(){
    session from it; we just check for that and, if found, send the person
    to the "set your password" screen instead of the normal login form. */
 async function handleAuthRedirect(){
-  if(!window.__usingSupabase || !window.__sbClient) return;
+  if(!window.__usingSupabase || !window.__sbClient) return false;
   const hash = window.location.hash || '';
-  if(hash.indexOf('type=invite')===-1 && hash.indexOf('type=recovery')===-1) return;
+  if(hash.indexOf('type=invite')===-1 && hash.indexOf('type=recovery')===-1) return false;
   await new Promise(r=>setTimeout(r, 400));
   try{
     const { data } = await window.__sbClient.auth.getSession();
-    if(data && data.session) showSetPasswordScreen();
+    if(data && data.session){ showSetPasswordScreen(); return true; }
   }catch(e){}
+  return false;
 }
 async function submitNewAccountPassword(){
   const p1 = document.getElementById('newAcctPass1').value;
@@ -3734,7 +3735,8 @@ async function submitNewAccountPassword(){
   toast('Password set. You are signed in.', 'success');
 }
 async function checkAuth(){
-  await handleAuthRedirect();
+  const handledByInvite = await handleAuthRedirect();
+  if(handledByInvite) return;
   try{
     if(!window.__usingSupabase || !window.__sbClient) return;
     const { data } = await window.__sbClient.auth.getSession();
