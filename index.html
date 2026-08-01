@@ -762,6 +762,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div id="publicSite">
@@ -1047,7 +1048,7 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; <span id="pubYear"></span> Jaad Logistics. All rights reserved. Red. Black. Reliable.</p>
+        <p>&copy; <span id="pubYear"></span> Jaad Logistics. All rights reserved. Red. Black. Reliable. <span style="opacity:.5;">· build 2026-08-01e</span></p>
         <div class="footer-badges">
           <span class="footer-badge">SSL Secured</span>
           <span class="footer-badge">Verified Carriers</span>
@@ -1088,7 +1089,7 @@
     </div>
     <div class="field"><label>Email</label><input type="email" id="loginUser" autocomplete="email"></div>
     <div class="field"><label>Password</label><input type="password" id="loginPass" autocomplete="current-password"></div>
-    <div style="margin:14px 0;display:flex;justify-content:center;"><div class="cf-turnstile" data-sitekey="0x4AAAAAAAEDihhWFPAg1nGQG" data-callback="onTurnstileVerified" data-expired-callback="onTurnstileExpired"></div></div>
+    <div style="margin:14px 0;display:flex;justify-content:center;"><div class="cf-turnstile" data-sitekey="0x4AAAAAAAEDrqpzZIgLY5-3t" data-callback="onTurnstileVerified" data-expired-callback="onTurnstileExpired"></div></div>
     <div class="login-err" id="loginErr"></div>
     <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="tryLogin()">Sign in</button>
   </div>
@@ -1114,7 +1115,7 @@
       <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAoKCgoKCgsMDAsPEA4QDxYUExMUFiIYGhgaGCIzICUgICUgMy03LCksNy1RQDg4QFFeT0pPXnFlZXGPiI+7u/sBCgoKCgoKCwwMCw8QDhAPFhQTExQWIhgaGBoYIjMgJSAgJSAzLTcsKSw3LVFAODhAUV5PSk9ecWVlcY+Ij7u7+//CABEIAXgCLAMBIgACEQEDEQH/xAAxAAEAAgMBAAAAAAAAAAAAAAAAAwQCBQYBAQEAAwEBAAAAAAAAAAAAAAAAAQIDBAX/2gAMAwEAAhADEAAAAtKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABNhcp014L9WJiGnKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABPYilw9NhmjWgzw38gJgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAelzI5/XCLQV7tLbzgvzgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM8bFdJhh6oCncivhVe+beaAAAAAAAAAAAAAAAAAAAAAAAAAAAAMoYySzU68MzPtCJAA8gsLUo+XYNOCEXwAAAAAAAAAAAAAAAAAAAAAAAAAAzt07uXaGfYRV781vKrMtIjRpJ5jVnG6rTxpkK64VbtHXh8GnIAAAAPTxsMCkAAAAAAAAAAAAAAAAAABcp+10swYALZ2ep5HrxjkPNB0GrNACWemrtbqZYqhbMAAATkFmbEkzhFWMAAAAAAAAAAAAAAAAB0ZzjZa8xAAMiz1FG8AKF+gc/vJbpHXwtkdHb685/dS7EgjitEdbZ1Dl9nZ25rJ7Eg1e0581gAAAAAAAAAAAAAAAAAHYcf2YxyFKrtxpctwNfckAADXbHQm+1WxwOTtZbE21C/QL2vtZHIzT3Tc1LdMtUbkRy271u7L3NdLzhrwAAAAAAAAAAAAAAAAAe9hx/ZAAAAAAGPJbXTF7o+OyOxcrEddQ1kJ70nIZHY+ctGdbU02JJ0XGynXObyOi0+EBrgAAAAAAAAAAAAAAAAAe9dyHp2TnNkbFhmAACuWNXT1h74AAAAAAAAAAAAAAAAAAAAAAAAAAAAAHs0A2EuqG2j1osVwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//EAAL/2gAMAwEAAgADAAAAIfPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPMG/PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP/AH7zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzX/wB8888888888888888888888888888888y+/wDfPPPPPPPPPPPPPPPPPPPPPPPPPPPPO7PP/wD8xvzzzzzzzzzzzzzzzzzzzzzzzzzzwPqf32bn7XzzzzzjTzzzzzzzzzzzzzzzzzzyu/zzzjz1bzzzzjAzzzzzzzzzzzzzzzzzzzDzzxTygwxwihChgTzzzzzzzzzzzzzzzzzzixyxzzzwzxjTySRDTzzzzzzzzzzzzzzzzzxDzzzzzjRwzThjjjyDzzzzzzzzzzzzzzzzzxzzjziRRzzzzzzzzzzzzzzzzzzzzzzzzzzzzzxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz/xAAC/9oADAMBAAIAAwAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAChEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEEC4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEEAMEAAAAAAAAAAAAAAAAAAAAAAAAAAAAJqAAADCAgAAAAAAAAAAAAAAAAAAAAAAAAADYUW40McEcAAAAAAAAAAAAAAAAAAAAAAAAAAWEDhBRASUAAwAAgCgAAAAAAAAAAAAAAAAAwAAQgBThgRTQyRzgAAAAAAAAAAAAAAAAAAgBBBAAADgiSBBiggwAAAAAAAAAAAAAAAAABgAAAAARiCijCSyQhQAAAAAAAAAAAAAAAAACAAQARzQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/xAAqEQACAQMDAgQHAQAAAAAAAAABAgMABBESIVEQQSAxQFATFCIyU2FwgP/aAAgBAgEBPwD+fXU5iAVfuNWtwZMo537exXTap2/W1IxRlYdjSkMAefYZDqdjyelm+qLHdfYJpFSNsnBxt1tJRG5DHAIoEH1pIAyamvAu0e55p3ZySxyfBFcSReR24NRXUcmxOlvWXxYaNzpNAZqKzd92+kVNaurkIpK18vN+M1DalwwcFT2NSW0sfbI5HSyaRg2TlR6uaITKFzjeooI4vIb8+KW1jk3xg8ioYvgppzn/AFn/AP/EACsRAAICAQEFCAIDAAAAAAAAAAECAwQFAAYREhNRECExMkBBUFIUIHCAov/aAAgBAwEBPwD+PsBiY7zvLON8SdwHU62hwaUeGeup5R8w6fBYCAQ4uDq+9tW6yWK0sLd/Ep1LG0Ujxt4qxB+AUb2A6nVWLk1oE6IOzaap+NkS4G4Sji+AxlSa1bhCRkqHBY+wGh2bTY+S3UjkiXjkRtMrKSrAgjxB9aqs7BVUknwA1jdmpZSJLm9E+nudV60FaMRwxhFHT9MlhqF3zpuk+w1kdn7tEllQyR9R6zZFK0hnDRgyr4HTMqLvYgAe51f2jq1uJIN0sn+RrHZ+rNUR7llVm4j3aGdxIAAtLq/tClV4XqvHMh866x+bx10qC4jf6trx1tTBTgeLlRgSv3kjp6vF5FsZYMwTj3ruK6vZa5fJ5j7k+i9w/ajnb1IBOPmR/RtZS+cjZ5xXhHCAF/tn/8QAORAAAQIDAwgHBwUBAQAAAAAAAQIDAAQRBRIxEBMgITJBUFEiMDRSYHGBFBUjQlNhcjNDgpCRJGL/2gAIAQEAAT8C/rbQ3XGFNUw8CIFTlcTQ+A2RicqxVPgNrZ0Fiij4CTsjQeG/wCMdFQqD4BRtDSWKKPgBtBGs6TiL0EEcdSgqhKAnqCAYU1y40ATCWqY9YUhUKaIw4ugVMAAaIUDhohQOipAVChdNOKg0I0FOgYQVFUNqpGcEZwRnBGcEHGEukYwFg6BNT1mMJlB815ShiE7oXLDXcreHyq4Qg1TCnAIKirLJm7Mt+dIuI7g/yLiO4P8AIuI7oi6juJ/yLUbuvJUBiMqXCICwYcNE9bKU9obhmhYmL6ynpp1w5VLsqlNTTBXOsO0zrlMLx4PXRZ/VR+Q0bXT8NtX30dZ6tlhx8kIGEe7pruwuTmGBnCKUguNPA1Vmyra5GM8hpFEKKyMDy4bJN5yZbH3ro2p2b1ENtrdVdSKmGLLbGt3WYEnLD9oQ7Z8svAXT9oYlW2EUpU84tNhAQHEihrCEKcUEpFTDNmIGt01PKPZJZP7SYcs+WX8t3yiWlG2E8zzi0pdvM5wChGRizHnNauiI90N/UMSskJVajeqCMlrOUbQjmeDJlGX5Zq8NdzGHrNeb1p6QgpUnEU0koUs0SKmJKV9nTU7Z0bS7MfMRIy4ZaB+ZWMEhIqcIVajCTQAmGZlt8dA5LU7N/KLPlw21fO0qCQNcLtNhBoKqhiaZfHQOvlktLsq/SLNlRTPLHlkzzQNL4rltRVXwOSeDS4+A1+AyLbbXtJBhdmSysKiDZHddj3Qv6ogWRzdhNlsJxJMIZaa2EgaVpkXGk815LVWoIQnmdeSTWpEw3TnTJafZx+QhOpCQOUWo4oMADeckutTbyCnnktHsqvSEC62hI3CLReU00AnFRyWU8pRW2o6gKjJaPalenBmf0m/wHXWo5V1Ce6IYeDrKFfaJqXEy3d37oXITKTS5XyiSkC2rOOY7hktTs38olHg7LoO/CJhhMw2UGFyEyg0uV8olLPUlYW7u3ZLR7Kv0iXdDjDavtE7Le0N037oMnMg0zRiz5Qy4K17RyWmKTJ+44MjYR5DrVqCElRwEOuF1xSzvMSc4ZZXNBhp9p1NUKGQkJxMAggEYRah/5/5RKTSpZf8A5OIhmYaeFUKyEgYmEkKFQdUWl2VfpEjOezm6rYMJWhaapNdC1m/01+nBRjCdkeXW2lNV+Cn1ypUpOyaR7ZM/VMLdcXtLJhi0HWEXKXhEzNOTOOoDdkCinA0gTcyP3TC3nV7SyYlp92XF3ERMzjkzqOocsjbzrWwoiPeU13hDdpPpJKulHvdz6Yh+fL7ZQWxwUYwzMNOjoK6ycng3VDZ6XPlGPGQSMDDVovt4m8PvDVqMq2wUw2+0vZWNN2aYa2lxM2k47qR0U8eqRCZl9GDhgWlMjeDAtZ7upj3s79NMG1Jk8oXNPrxcP9/n/8QAKhABAAIBAQcDBQEBAQAAAAAAAQARITEQIEFQUWFxMGCBkaGxwfDRkPH/2gAIAQEAAT8h/wCbdO9EqX7EU5DGzPGj7DybS+9hmvnuVT2Ea3DCewQsQwG5UvYJv2LQBdI5vC5GsUpOe+OnkvQFyRTMojnnKtBCyyfU14mQyJXNhMYLQbihqy56N3Q3d8tNUc1uUM7LCdQTXGE252GdhnYZ2WOmnWdQTS3atCy4fUBQGrCDT5RurOFYWlmu3KK3tNEyzXnaNkEdbvKT9LZpT/Mjw/oIFQH49mkw7knH8z5z1SruuPPCJC6sGt5iRdUnWhAdD+vJ7BV7tsP8O7Z0Fd28eXeBdCabl6pFs7X6yj453cC1QIq0OMqrhXFF+k15YhXCz43cl2kbvEFselwgFRFfOQUJ4iNZp9S1xiAE0IadkIGogc1dFMovyyXAVkBWiAk4pzbCHjGdlQf+XJsYtWGsvo7NOu+8XanSfO723dNJDmK4eOA1ZVF9Zb85qcdn4kNF+sgKmglMO4T5YFrs/k7ynsLp2ZJ86DeTlEt/C8NhteWJmB4Yf+hsl/8AI2XeA3sJ0pAqE3TZHd6leHYYRNIBJgQK3Yg2a7Pvfyh6cGPzVC4qtrmW5NhPseSiYH/NetSvU+sLPHLzHqwMqZO98B9NsMR4S5OBY7k+Cx7ysqesd7YbL+r+UDOqb8wK7RbjKT4mjJ14Nlu6PJTUmm6erKLQWzrGUoj1BATWw+yPMdK0WMKvhLcZgBQPbpsBsA7w+ZWiSlH8zOIv2oQIHc0ny5LoeZh4Xqhk/wB4bVbVdoAVH7vTMQB0uKGOiGxq2XaCUR/I1KHDpspgD4NiFxAz9UocsabBPtvjyXAeYHpe3H1DrbjgqlW15yvaD2mGgBqUgWX874OC+hllj+6mvPTQKTSv8w+vmEDq06UNMr8Tg9irq/8Afv8A/8QAJxABAAIABQMDBQEAAAAAAAAAAQARECExQVEgUHEwYGGBkaGx8ZD/2gAIAQEAAT8Q/wA28062EdXsNT2Im33nAADQwsw9h30hWIBrMzIlews05XQuwXZ7BJV/josGfD7BqHLDS4DoD4yJSnsCu/PVTtls7+hQtmgrg6lR8hLkh75UzTTkw3Ivk+hXCZcJZxK8Ke83hLKbwkACgo9Mys7kl3CUKJ3ZG6GEKXQeoBFyr6C0LNIb46QMyuRHVBruvxSxAE3LwQWoEyzMjVyNQ5m0/nz+PP48/gxbaGYlIZEL3eHEnNAuM/u+oZapQEO6aqFPY0UFPaoxuzXtBIXhMvkcvK4xUSMjhliQtsP5KLZGSzh5UD0/nsIuhlZAq6pwZcg5r1QHnfAXFyNRFgHuk1IS0vQeA+zigQPSg+rpnzz9EUiI0OgZxEaSnpVpF4IiqRHoGBnY1CfQIEBkSdV27lM1hyzsqpVtexomp6JUWH4+mbkyC4DvBXKKenbbA+dB8gqJhsgWPXOgjlZYGV52mFV8TCPm8o3FgIFVoCI4LDZ7Cmg64LL7r47NyoKnLhkJBzxoE6mXZQC4L0p/T6WHLmWOm0Nyto0BKfA6YmK6nkMAEeVfLiBIFq5ARPzaLIWheQwfk/pgS+usGl21JWyABBHRMH2ceykYN0MjzgfDXeFr5LjYTtTvw6dkm1XkM3q2QzgADIKInqNcCWsu8rgYfMNLZXgIy6HhqcCfkXAWPP68yMg6+kQY05UIU2qx6t1vZ3aiD4b9H1rN5XfMt2KYeBkxRBpw2UGTaVNuueAKswSUfCi5Fb8IjNe1IwwuYK34P044IhfAZMortuNmgdcxFcKdcJdoX2X8yJNqL7Hqh0Tb4JrrL4GxG5qJkgXa8zBaXNVUQGYQNEYyW42tLnZzacCQi3VE5diAYh879cV70/fCX8Ij0ZI+ey34qZBwH49X6t2YxvMzSVNH7CMDC0x2yk+YYYKWbqnBQ6OvDCHZ/bhD13g+EFHKUCzzNNfWPIIbMx1KEK2J2ViXQCzRlzVXqCcPlsQ5ZCq6q95JmW6pleLig1I7NfwI9KgWsfrZwI6n3xVKtr31i3ORqCgVxmhViwd12dLsrzdjlsNERVFd3/fv/9k=" alt="JAAD Logistics">
     </div>
     <nav class="side-nav" id="sideNav"></nav>
-    <div class="side-foot"><span id="sideFoot">Local build · v1</span><br><a href="javascript:void(0)" onclick="logout()" style="color:var(--red);text-decoration:none;font-weight:600;">Log out</a></div>
+    <div class="side-foot"><span id="sideFoot">Local build · v1</span><br><a href="javascript:void(0)" onclick="viewPublicSite()" style="color:var(--muted);text-decoration:none;font-weight:600;">View website</a> · <a href="javascript:void(0)" onclick="logout()" style="color:var(--red);text-decoration:none;font-weight:600;">Log out</a></div>
   </aside>
 
   <div class="app-main">
@@ -2605,6 +2606,72 @@ function renderTopbarActions(section){
   if(section==='customers'){
     box.innerHTML += ' <button class="btn btn-ghost" onclick="openFundWalletModal()">'+icon('wallet')+' Fund Wallet</button>';
   }
+  if(section==='leads'){
+    box.innerHTML += ' <button class="btn btn-ghost" onclick="triggerLeadsUpload()">Upload leads (CSV/Excel)</button>';
+  }
+}
+function triggerLeadsUpload(){
+  let input = document.getElementById('leadsUploadInput');
+  if(!input){
+    input = document.createElement('input');
+    input.type = 'file';
+    input.id = 'leadsUploadInput';
+    input.accept = '.csv,.xlsx,.xls';
+    input.style.display = 'none';
+    input.addEventListener('change', handleLeadsFileUpload);
+    document.body.appendChild(input);
+  }
+  input.value = '';
+  input.click();
+}
+async function handleLeadsFileUpload(e){
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  if(typeof XLSX === 'undefined'){ toast('Upload tool did not load. Check your connection and try again.', 'error'); return; }
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+    if(!rows.length){ toast('No rows found in that file.', 'error'); return; }
+    const fieldDefs = ENTITY.leads.fields.filter(f=>f.key);
+    const keyByHeader = {};
+    fieldDefs.forEach(f=>{
+      keyByHeader[f.key.toLowerCase()] = f.key;
+      keyByHeader[f.label.toLowerCase()] = f.key;
+    });
+    let added = 0, skipped = 0;
+    const newLeads = [];
+    rows.forEach(row=>{
+      const lead = {};
+      Object.keys(row).forEach(header=>{
+        const matchKey = keyByHeader[String(header).trim().toLowerCase()];
+        if(!matchKey) return;
+        const fieldDef = fieldDefs.find(f=>f.key===matchKey);
+        let val = row[header];
+        if(fieldDef && fieldDef.type==='number'){ val = parseFloat(val); if(isNaN(val)) val = 0; }
+        else { val = String(val).trim(); }
+        lead[matchKey] = val;
+      });
+      fieldDefs.forEach(f=>{
+        if((lead[f.key]===undefined || lead[f.key]==='') && f.default!==undefined){
+          lead[f.key] = typeof f.default==='function' ? f.default() : f.default;
+        }
+      });
+      const missingRequired = fieldDefs.some(f=>f.required && !lead[f.key]);
+      if(missingRequired){ skipped++; return; }
+      lead.id = genId('L');
+      newLeads.push(lead);
+      added++;
+    });
+    if(added===0){ toast('No rows had the required fields (company name, contact name, phone). Nothing was imported.', 'error'); return; }
+    DATA.leads = DATA.leads.concat(newLeads);
+    await persist('leads');
+    if(CURRENT_SECTION==='leads') renderEntityList('leads');
+    toast('Imported '+added+' lead'+(added===1?'':'s')+(skipped>0 ? ', skipped '+skipped+' row'+(skipped===1?'':'s')+' missing required fields' : '')+'.', 'success');
+  }catch(err){
+    toast('Could not read that file. Make sure it is a CSV or Excel file.', 'error');
+  }
 }
 function openUserAccessModal(id){
   const u = DATA.users.find(x=>x.id===id);
@@ -3691,11 +3758,32 @@ function setPubChatWidgetVisible(visible){
   if(fab) fab.style.display = visible ? '' : 'none';
   if(panel && !visible) panel.style.display = 'none';
 }
-function showAdminLogin(){
+async function showAdminLogin(){
+  if(window.__usingSupabase && window.__sbClient){
+    try{
+      const { data } = await window.__sbClient.auth.getSession();
+      if(data && data.session){
+        document.getElementById('publicSite').style.display = 'none';
+        document.getElementById('appRoot').style.display = 'flex';
+        document.getElementById('loginGate').style.display = 'none';
+        setPubChatWidgetVisible(false);
+        CURRENT_USER_ROLE = 'Admin';
+        CURRENT_USER_ID = data.session.user.id;
+        goTo(hasAccessToSection(CURRENT_SECTION) ? CURRENT_SECTION : 'dashboard');
+        return;
+      }
+    }catch(e){}
+  }
   document.getElementById('publicSite').style.display = 'none';
   document.getElementById('appRoot').style.display = 'flex';
   document.getElementById('loginGate').style.display = 'flex';
   setPubChatWidgetVisible(false);
+}
+function viewPublicSite(){
+  document.getElementById('appRoot').style.display = 'none';
+  document.getElementById('loginGate').style.display = 'none';
+  document.getElementById('publicSite').style.display = 'block';
+  setPubChatWidgetVisible(true);
 }
 function showSetPasswordScreen(){
   document.getElementById('publicSite').style.display = 'none';
@@ -3775,8 +3863,11 @@ async function completeLogin(role, userId){
   CURRENT_USER_ROLE = role;
   CURRENT_USER_ID = userId;
   document.getElementById('loginGate').style.display='none';
+  await loadAll();
+  await migrateLegacyIds();
   buildSidebar();
-  if(!hasAccessToSection(CURRENT_SECTION)) goTo('dashboard');
+  buildSectionShells();
+  goTo(hasAccessToSection(CURRENT_SECTION) ? CURRENT_SECTION : 'dashboard');
 }
 async function tryLogin(){
   const u = document.getElementById('loginUser').value.trim();
