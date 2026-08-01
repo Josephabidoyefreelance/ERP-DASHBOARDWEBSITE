@@ -3784,11 +3784,10 @@ async function tryLogin(){
   const errEl = document.getElementById('loginErr');
   errEl.textContent = '';
   if(!u || !p){ errEl.textContent = 'Enter your email and password.'; return; }
-  if(!CAPTCHA_TOKEN){ errEl.textContent = 'Please complete the security check above.'; return; }
   if(!window.__usingSupabase || !window.__sbClient){ errEl.textContent = 'Cannot reach the login service right now.'; return; }
-  const { data, error } = await window.__sbClient.auth.signInWithPassword({
-    email: u, password: p, options: { captchaToken: CAPTCHA_TOKEN }
-  });
+  const signInPayload = { email: u, password: p };
+  if(CAPTCHA_TOKEN) signInPayload.options = { captchaToken: CAPTCHA_TOKEN };
+  const { data, error } = await window.__sbClient.auth.signInWithPassword(signInPayload);
   CAPTCHA_TOKEN = '';
   try{ if(window.turnstile) window.turnstile.reset(); }catch(e){}
   if(error){ errEl.textContent = 'Incorrect email or password.'; return; }
