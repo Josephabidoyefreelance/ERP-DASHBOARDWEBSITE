@@ -374,6 +374,7 @@ h1,h2,h3,h4{font-family:var(--disp); letter-spacing:-0.01em;}
 .nav-item svg{width:17px; height:17px; flex-shrink:0;}
 .nav-item:hover{background:#141417; color:#fff;}
 .nav-item.active{background:#141417; color:#fff; border-left-color:var(--red);}
+.nav-badge{margin-left:auto; background:var(--red); color:#fff; font-size:10.5px; font-weight:800; padding:1px 6px; border-radius:20px; line-height:1.5;}
 .sidebar-foot{padding:16px 22px; border-top:1px solid #202024; font-size:11px; color:#6c6c72; font-family:var(--mono);}
 
 .main{flex:1; margin-left:var(--sidebar-w); display:flex; flex-direction:column; min-width:0;}
@@ -1067,7 +1068,7 @@ tbody tr:hover{background:var(--surface-2);}
         <a href="#fraud" data-legal="fraud">Fraud awareness</a>
       </div>
     </div>
-    <div class="footer-credit">&copy; 2026 JAAD LOGISTICS. ALL RIGHTS RESERVED.</div>
+    <div class="footer-credit">&copy; 2026 JAAD LOGISTICS. ALL RIGHTS RESERVED. <span style="color:#8a8a8f;">&middot; Build 17</span></div>
   </div>
 </footer>
 
@@ -1240,11 +1241,19 @@ async function getGroqReply(userMessage, history){
   const messages = [{role:'system', content: systemPrompt}];
   (history||[]).slice(-6).forEach(m=>{ if(m.text) messages.push({role: m.from==='visitor' ? 'user' : 'assistant', content: m.text}); });
   messages.push({role:'user', content:userMessage});
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method:'POST',
-    headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+GROQ_API_KEY},
-    body: JSON.stringify({model:GROQ_MODEL, messages, temperature:0.4, max_tokens:220})
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(()=>controller.abort(), 8000); // never let a slow/stuck request hang the chat
+  let res;
+  try{
+    res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+GROQ_API_KEY},
+      body: JSON.stringify({model:GROQ_MODEL, messages, temperature:0.4, max_tokens:220}),
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
   if(!res.ok) throw new Error('Groq request failed: '+res.status);
   const data = await res.json();
   const text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
@@ -1325,6 +1334,7 @@ function ensureLiveChat(){
   liveChatLastStatus = 'Open';
   liveChatPoll = setInterval(pollForAgentReplies, 2000);
   if(typeof pushNotification === 'function') pushNotification('New website chat started');
+  if(typeof persistDB==='function') persistDB();
 }
 function pollForAgentReplies(){
   if(!liveChatId) return;
@@ -1478,8 +1488,8 @@ document.getElementById('quoteForm').addEventListener('submit', e=>{
   if(typeof DB !== 'undefined' && DB.leads) DB.leads.unshift(lead);
 
   // also raise a draft quotation so the finance/ops team can price it up in Finance > Quotations
-  if(typeof DB !== 'undefined' && DB.quotations && typeof SEQ !== 'undefined'){
-    const ref = 'QUO-' + pad(SEQ.quote++, 4);
+  if(typeof DB !== 'undefined' && DB.quotations && DB.seq){
+    const ref = 'QUO-' + pad(DB.seq.quote++, 4);
     DB.quotations.unshift({
       ref, customer: company, contact: name + (phone ? ', ' + phone : ''),
       route: from + ' to ' + to, mode: 'Trucks / Haulage',
@@ -1589,7 +1599,7 @@ let currentUser = null;
 
 /* wire the real login/signup forms on the public site into the same demo accounts */
 function attemptLogin(role, email, pass, errorElId){
-  const match = DEMO_ACCOUNTS[role].find(a => a.email === email.trim().toLowerCase() && a.pass === pass);
+  const match = DEMO_ACCOUNTS[role].find(a => a.email === email.trim().toLowerCase() && a.pass === pass.trim());
   const errEl = document.getElementById(errorElId);
   if(!match){
     if(errEl) errEl.style.display = 'block';
@@ -1679,9 +1689,8 @@ function ddmm(d){ const dt=new Date(d); return pad(dt.getDate(),2)+pad(dt.getMon
 function yyyy(d){ return String(new Date(d).getFullYear()); }
 function uid(prefix){ return prefix+'_'+Math.random().toString(36).slice(2,9); }
 function nowStamp(){ const d=new Date(); return d.toISOString().slice(0,10)+' '+d.toTimeString().slice(0,5); }
-let SEQ = { shipment:239, manifest:6, invoice:410, po:118, quote:1043, ticket:2292 };
-function trackingNumber(pickupDate){ return 'JAAD/'+ddmm(pickupDate)+'/'+yyyy(pickupDate)+'/'+pad(SEQ.shipment++,5); }
-function manifestNumber(dateStr){ return 'MNF/JAAD/'+ddmm(dateStr)+'/'+yyyy(dateStr)+'/'+pad(SEQ.manifest++,3); }
+function trackingNumber(pickupDate){ return 'JAAD/'+ddmm(pickupDate)+'/'+yyyy(pickupDate)+'/'+pad(DB.seq.shipment++,5); }
+function manifestNumber(dateStr){ return 'MNF/JAAD/'+ddmm(dateStr)+'/'+yyyy(dateStr)+'/'+pad(DB.seq.manifest++,3); }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function slug(s){ return String(s).toLowerCase().replace(/[^a-z0-9]+/g,''); }
 function toast(msg){
@@ -1692,8 +1701,23 @@ function toast(msg){
 }
 function pushNotification(text){
   DB.notifications.unshift({t:text, time:'just now'});
+  if(typeof persistDB==='function') persistDB();
+  playNotificationSound();
   const bell = document.getElementById('topbar');
   if(bell) renderTopbar();
+}
+function playNotificationSound(){
+  if(!soundOn) return;
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = 880;
+    g.gain.setValueAtTime(0.001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime+0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.25);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime+0.26);
+  }catch(e){}
 }
 function exportCSV(rows, headers, filename){
   const lines=[headers.join(',')];
@@ -1808,6 +1832,7 @@ const CITIES=['Lagos','Abuja','Port Harcourt','Kano','Ibadan','Benin City','Enug
 const TEAM = ['Abidoye Joseph Damilare','Oluwaseun John','Kelechi Uche','Fatima Sani'];
 
 const DB = {
+  seq: { shipment:239, manifest:6, invoice:410, po:118, quote:1043, ticket:2292 },
   dismissedAlerts:[],
   notifications:[
     {t:'Shipment JAAD/0208/2026/00238 marked Exception', time:'12m ago'},
@@ -2036,17 +2061,33 @@ const DB = {
    Without this, data created in one tab (e.g. a customer booking) would never
    be visible in another tab (e.g. the admin view) since they don't share memory.
    This saves DB to localStorage and syncs changes across tabs of the same page,
-   and also survives an accidental refresh or a browser tab being reloaded. */
-const DB_STORAGE_KEY = 'jaad_erp_state_v1';
+   and also survives an accidental refresh or a browser tab being reloaded.
+
+   IMPORTANT: earlier versions of this saved on a blind timer from every open tab,
+   which meant an old tab left open in the background (with older, stale data in
+   memory) could periodically overwrite newer data saved by a different, newer tab
+   — silently reverting bookings, chats etc. That is fixed here: every save carries
+   a timestamp, and a tab only ever adopts a save that is genuinely newer than what
+   it already has. There is no blind timer any more; saving only happens right after
+   an actual change, from the tab that made it. */
+const DB_STORAGE_KEY = 'jaad_erp_state_v3';
+let lastSyncedAt = 0;
 function persistDB(){
-  try{ localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(DB)); }catch(e){}
+  try{
+    const savedAt = Date.now();
+    localStorage.setItem(DB_STORAGE_KEY, JSON.stringify({data:DB, savedAt}));
+    lastSyncedAt = savedAt;
+  }catch(e){}
 }
 function loadPersistedDB(){
   try{
     const raw = localStorage.getItem(DB_STORAGE_KEY);
     if(!raw) return false;
-    const saved = JSON.parse(raw);
-    Object.keys(saved).forEach(k=>{ DB[k] = saved[k]; });
+    const parsed = JSON.parse(raw);
+    if(!parsed || typeof parsed.savedAt !== 'number' || !parsed.data) return false;
+    if(parsed.savedAt <= lastSyncedAt) return false; // what we already have is the same age or newer, don't touch it
+    Object.keys(parsed.data).forEach(k=>{ DB[k] = parsed.data[k]; });
+    lastSyncedAt = parsed.savedAt;
     return true;
   }catch(e){ return false; }
 }
@@ -2063,14 +2104,33 @@ function rerenderCurrentView(){
   }catch(e){}
   try{ if(typeof renderPublicCareers==='function') renderPublicCareers(); }catch(e){}
 }
+function reconcileSequences(){
+  // self-healing: never let a sequence counter be lower than what the actual data already shows,
+  // so a stale reload can't hand out a number that's already in use, no matter what happened before
+  const maxSuffix = (arr, getStr) => arr.reduce((max, item) => {
+    const s = getStr(item);
+    const m = s && s.match(/(\d+)\s*$/);
+    return m ? Math.max(max, parseInt(m[1], 10)) : max;
+  }, 0);
+  DB.seq.invoice = Math.max(DB.seq.invoice, maxSuffix(DB.invoices, i=>i.no) + 1);
+  DB.seq.quote = Math.max(DB.seq.quote, maxSuffix(DB.quotations, q=>q.ref) + 1);
+  DB.seq.po = Math.max(DB.seq.po, maxSuffix(DB.purchaseOrders, p=>p.no) + 1);
+  DB.seq.ticket = Math.max(DB.seq.ticket, maxSuffix(DB.tickets, t=>t.id) + 1);
+  DB.seq.shipment = Math.max(DB.seq.shipment, maxSuffix(DB.bookings, b=>b.tracking) + 1);
+  DB.seq.manifest = Math.max(DB.seq.manifest, maxSuffix(DB.manifests, m=>m.no) + 1);
+}
 loadPersistedDB();
-setInterval(persistDB, 1200);
+reconcileSequences();
 window.addEventListener('beforeunload', persistDB);
 window.addEventListener('storage', e=>{
   if(e.key===DB_STORAGE_KEY && e.newValue){
-    if(loadPersistedDB()) rerenderCurrentView();
+    if(loadPersistedDB()){ reconcileSequences(); rerenderCurrentView(); }
   }
 });
+// also poll for updates every 2s as a safety net for browsers that delay/throttle the 'storage'
+// event on background tabs \u2014 this only ever ADOPTS newer data, it never writes, so it carries none
+// of the old bug's risk
+setInterval(()=>{ if(loadPersistedDB()){ reconcileSequences(); rerenderCurrentView(); } }, 2000);
 
 function renderPublicCareers(){
   const panel = document.getElementById('careersPanel');
@@ -2140,14 +2200,16 @@ function renderSidebar(){
     h += '<div class="preview-banner"><span>Previewing as '+esc(previewRole)+'</span><button onclick="exitPreview()">Exit preview</button></div>';
   }
   h += '<div class="brand"><img src="'+LOGO_SRC+'" alt="JAAD Logistics"><div><div class="brand-word">JAAD ERP</div><div class="brand-sub">Operations</div></div></div><nav class="navlist">';
+  const needsAttention = (typeof DB!=='undefined' && DB.chats) ? DB.chats.filter(c=>c.status==='Open'||c.status==='Pending').length : 0;
   nav.forEach(group=>{
     h += '<div class="nav-group-label">'+group.sec+'</div>';
     group.items.forEach(it=>{
       const onclick = it.k==='calculator' ? 'openCalculator()' : "navigate('"+it.k+"')";
-      h += '<a class="nav-item'+(currentView===it.k?' active':'')+'" onclick="'+onclick+'">'+ic(it.icon)+'<span>'+it.label+'</span></a>';
+      const badge = (it.k==='support' && needsAttention>0) ? '<span class="nav-badge">'+needsAttention+'</span>' : '';
+      h += '<a class="nav-item'+(currentView===it.k?' active':'')+'" onclick="'+onclick+'">'+ic(it.icon)+'<span>'+it.label+'</span>'+badge+'</a>';
     });
   });
-  h += '</nav><div class="sidebar-foot">JAAD Logistics Ltd<br>Lagos, Nigeria &middot; est. 2018<br>Prototype build, sample data only</div>';
+  h += '</nav><div class="sidebar-foot">JAAD Logistics Ltd<br>Lagos, Nigeria &middot; est. 2018<br>Prototype build, sample data only<br><b style="color:var(--red);">Build 17</b></div>';
   document.getElementById('sidebar').innerHTML = h;
 }
 function findLabel(k){ for(const g of NAV_ALL){ for(const it of g.items){ if(it.k===k) return it.label; } } return ''; }
@@ -2204,6 +2266,7 @@ function openNotifications(){
   let rows = DB.notifications.map(n=>'<div class="checkbox-row" style="justify-content:space-between;"><span>'+esc(n.t)+'</span><span style="color:var(--text-faint); font-size:11px;">'+n.time+'</span></div>').join('');
   openModal('<div class="modal-head"><h3>Notifications</h3><button class="x-btn" onclick="closeModal()">'+ic('x')+'</button></div><div class="modal-body">'+(rows||'<div class="empty">No notifications</div>')+'</div>');
   DB.notifications = [];
+  if(typeof persistDB==='function') persistDB();
   renderTopbar();
 }
 
@@ -2369,7 +2432,7 @@ function statCol(n,label){ return '<div class="stat-col"><div class="n">'+n+'</d
 function kpiCard(label,val,cap,overrideLabel){
   return '<div class="kpi-card"><div class="kpi-label">'+esc(overrideLabel||label)+'</div><div class="kpi-value">'+(val||label)+'</div><div class="kpi-cap">'+esc(cap||'')+'</div></div>';
 }
-function dismissBanner(id){ DB.dismissedAlerts.push(id); navigate('dashboard'); }
+function dismissBanner(id){ DB.dismissedAlerts.push(id); if(typeof persistDB==='function') persistDB(); navigate('dashboard'); }
 
 function invoiceStatusCounts(){
   const c={Paid:0,Pending:0,Overdue:0};
@@ -2438,6 +2501,7 @@ function updateInvoiceStatus(no,val){
   if(val==='Paid' && !i.paidDate) i.paidDate = new Date().toISOString().slice(0,10);
   if(val!=='Paid') i.paidDate = null;
   toast(no+' set to '+val);
+  if(typeof persistDB==='function') persistDB();
   navigate('finance');
 }
 const EXPENSE_STATUS_OPTS = ['Paid','Unpaid'];
@@ -2445,6 +2509,7 @@ function updateExpenseStatus(cat,val){
   const e = DB.expenses.find(x=>x.cat===cat);
   e.status = val;
   toast(cat+' expense set to '+val);
+  if(typeof persistDB==='function') persistDB();
   navigate('finance');
 }
 function poCounts(){
@@ -2453,7 +2518,7 @@ function poCounts(){
   return c;
 }
 const PO_STATUS_OPTS = ['Ordered','Pending','Received'];
-function updatePOStatus(no,val){ const p=DB.purchaseOrders.find(x=>x.no===no); p.status=val; toast(no+' set to '+val); navigate('finance'); }
+function updatePOStatus(no,val){ const p=DB.purchaseOrders.find(x=>x.no===no); p.status=val; toast(no+' set to '+val); if(typeof persistDB==='function') persistDB(); navigate('finance'); }
 function renderFinance(){
   const tab=currentTab.finance||'overview';
   const tabs=['overview','invoices','expenses','payroll','purchase','quotations'];
@@ -2486,8 +2551,15 @@ function renderFinance(){
         ['VAT collected (owed to FIRS, not company income)', fmtNaira(fin.vat)]
       ])+'</div></div>';
   } else if(tab==='invoices'){
-    body = tableWrap(['Invoice no.','Customer','Amount','Date','Status'],
-      DB.invoices.map(i=>['<span class="mono link-cell" onclick="openInvoiceDetail(\''+i.no+'\')">'+i.no+'</span>',i.customer,fmtNaira(i.amount),fmtDateShort(i.date),switchSelect(i.status,INVOICE_STATUS_OPTS,"updateInvoiceStatus('"+i.no+"', this.value)")]));
+    body = '<div class="note">New invoices start as a draft, only visible to you. Post one when it\u2019s ready for the customer to see in their dashboard.</div>'+
+      tableWrap(['Invoice no.','Customer','Amount','Date','Status','Posted'],
+      DB.invoices.map(i=>{
+        const isPosted = i.posted!==false;
+        const postedCell = isPosted
+          ? '<span class="badge b-green">Posted</span> <button class="btn btn-sm" style="margin-left:6px;" onclick="unpostInvoice(\''+i.no+'\')">Unpost</button>'
+          : '<span class="badge b-amber">Draft</span> <button class="btn btn-sm btn-primary" style="margin-left:6px;" onclick="postInvoice(\''+i.no+'\')">Post to customer</button>';
+        return ['<span class="mono link-cell" onclick="openInvoiceDetail(\''+i.no+'\')">'+i.no+'</span>',i.customer,fmtNaira(i.amount),fmtDateShort(i.date),switchSelect(i.status,INVOICE_STATUS_OPTS,"updateInvoiceStatus('"+i.no+"', this.value)"), postedCell];
+      }));
   } else if(tab==='expenses'){
     const rows = DB.expenses.map(e=>['<span class="link-cell" onclick="openExpenseDetail(\''+e.cat+'\')">'+e.cat+'</span>',e.vendor,fmtNaira(e.amount),fmtDateShort(e.date),switchSelect(e.status||'Unpaid',EXPENSE_STATUS_OPTS,"updateExpenseStatus('"+e.cat+"', this.value)")]);
     body = tableWrap(['Category','Vendor','Amount','Date','Status'], rows);
@@ -2582,11 +2654,11 @@ function saveNewInvoice(){
   const desc = document.getElementById('ni-desc').value.trim();
   if(!customer || !amount){ toast('Choose a customer and add an amount'); return; }
   if(tracking && DB.invoices.find(x=>x.linkedShipment && x.linkedShipment.toLowerCase()===tracking.toLowerCase())){ toast('An invoice already exists for that shipment'); return; }
-  const no = 'INV-'+pad(SEQ.invoice++,5);
-  DB.invoices.unshift({no, customer, amount, status:'Pending', date:new Date().toISOString().slice(0,10), linkedShipment: tracking || null,
+  const no = 'INV-'+pad(DB.seq.invoice++,5);
+  DB.invoices.unshift({no, customer, amount, status:'Pending', posted:false, date:new Date().toISOString().slice(0,10), linkedShipment: tracking || null,
     items:[{desc: desc || 'Freight charges', amount}]});
   if(typeof persistDB==='function') persistDB();
-  toast('Invoice '+no+' created, visible in '+customer+'\u2019s account');
+  toast('Invoice '+no+' created as a draft \u2014 post it when you\u2019re ready for '+customer+' to see it');
   closeModal();
   openInvoiceDetail(no);
 }
@@ -2635,9 +2707,13 @@ function openInvoiceDetail(no){
     '<tr><td style="text-align:right;">VAT, 7.5%</td><td style="text-align:right;">'+fmtNaira(vat)+'</td></tr>'+
     '<tr class="doc-total-row"><td>Total</td><td style="text-align:right;">'+fmtNaira(i.amount)+'</td></tr></tbody></table>'+
     '<div class="doc-sign"><div class="line">Prepared by</div><div class="line">'+signLine+'</div></div>';
-  openModal('<div class="modal-head"><h3>'+i.no+'</h3><button class="x-btn" onclick="closeModal()">'+ic('x')+'</button></div>'+
+  const isAdminView = document.getElementById('app') && document.getElementById('app').style.display==='flex';
+  const postBtn = isAdminView ? (i.posted===false
+    ? '<button class="btn btn-primary" onclick="postInvoice(\''+no+'\')">Post to customer</button>'
+    : '<button class="btn" onclick="unpostInvoice(\''+no+'\')">Unpost</button>') : '';
+  openModal('<div class="modal-head"><h3>'+i.no+(i.posted===false?' <span class="badge b-amber">Draft</span>':'')+'</h3><button class="x-btn" onclick="closeModal()">'+ic('x')+'</button></div>'+
     '<div class="modal-body"><div class="doc" style="position:relative;"><div class="doc-head"><div><img src="'+LOGO_SRC+'" style="height:30px;"></div><div class="co">JAAD Logistics Ltd<br>info@jaadlogistics.com</div></div>'+inner+stamp+'</div></div>'+
-    '<div class="modal-foot"><button class="btn" onclick="closeModal()">Close</button><button class="btn" onclick="downloadInvoicePDF(\''+no+'\')">'+ic('download')+' Download PDF</button><button class="btn btn-primary" onclick="printInvoice(\''+no+'\')">'+ic('printer')+' Print</button></div>', 'doc');
+    '<div class="modal-foot"><button class="btn" onclick="closeModal()">Close</button><button class="btn" onclick="downloadInvoicePDF(\''+no+'\')">'+ic('download')+' Download PDF</button><button class="btn btn-primary" onclick="printInvoice(\''+no+'\')">'+ic('printer')+' Print</button>'+postBtn+'</div>', 'doc');
 }
 function printInvoice(no){
   const i = DB.invoices.find(x=>x.no===no);
@@ -2782,6 +2858,7 @@ function convertLeadToCustomer(id){
   if(DB.customers.find(c=>c.name===l.company)){ toast(l.company+' is already a customer'); return; }
   DB.customers.unshift({name:l.company, type:'B2B', contact:l.contactName+', '+l.phone, credit:Math.max(l.value||0,500000), balance:0, since:String(new Date().getFullYear()), status:'Active'});
   l.status = 'Won';
+  if(typeof persistDB==='function') persistDB();
   closeModal();
   currentTab.customers = null;
   navigate('customers');
@@ -2818,8 +2895,8 @@ function openLeadForm(id){
     '<div class="field"><label>Notes</label><textarea id="lf-notes" rows="2" placeholder="Optional note to log with this save"></textarea></div>'+
     '</div><div class="modal-foot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveLead('+(isNew?'null':'\''+id+'\'')+')">Save lead</button></div>', true);
 }
-function updateLeadStatus(id,val){ const l=DB.leads.find(x=>x.id===id); l.status=val; toast(l.company+' set to '+val); navigate('crm'); }
-function updateLeadPriority(id,val){ const l=DB.leads.find(x=>x.id===id); l.priority=val; toast(l.company+' priority set to '+val); navigate('crm'); }
+function updateLeadStatus(id,val){ const l=DB.leads.find(x=>x.id===id); l.status=val; toast(l.company+' set to '+val); if(typeof persistDB==='function') persistDB(); navigate('crm'); }
+function updateLeadPriority(id,val){ const l=DB.leads.find(x=>x.id===id); l.priority=val; toast(l.company+' priority set to '+val); if(typeof persistDB==='function') persistDB(); navigate('crm'); }
 function saveLead(id){
   const get = i=>document.getElementById(i).value;
   const data = {
@@ -2843,11 +2920,12 @@ function saveLead(id){
   currentTab.crm='leads';
   navigate('crm');
   toast('Lead saved: '+data.company);
+  if(typeof persistDB==='function') persistDB();
 }
 
 /* ---- Quotations ---- */
 const QUOTATION_STATUS_OPTS = ['Pending','Approved','Declined'];
-function updateQuotationStatus(ref,val){ const q=DB.quotations.find(x=>x.ref===ref); q.status=val; toast(ref+' set to '+val); navigate('finance'); }
+function updateQuotationStatus(ref,val){ const q=DB.quotations.find(x=>x.ref===ref); q.status=val; toast(ref+' set to '+val); if(typeof persistDB==='function') persistDB(); navigate('finance'); }
 function quoteTotal(q){
   // Quotations preview what the eventual invoice will show: VAT is included in the total.
   const subtotal = q.items.reduce((s,it)=>s+it.qty*it.rate,0);
@@ -2903,9 +2981,10 @@ function saveNewQuotation(){
   const desc = document.getElementById('nq-desc').value.trim();
   const amount = Number(document.getElementById('nq-amount').value) || 0;
   if(!customer || !route || !desc){ toast('Add a customer, route and description'); return; }
-  const ref = 'QUO-'+pad(SEQ.quote++,4);
+  const ref = 'QUO-'+pad(DB.seq.quote++,4);
   DB.quotations.unshift({ref, customer, contact, route, mode, date:new Date().toISOString().slice(0,10), validUntil:valid, status:'Pending', items:[{desc, qty:1, rate:amount}]});
   toast('Quotation '+ref+' saved');
+  if(typeof persistDB==='function') persistDB();
   closeModal();
   navigate('finance');
 }
@@ -2962,15 +3041,17 @@ function assignStaffToCustomer(name){
   const c = DB.customers.find(x=>x.name===name);
   c.assignedTo = sel.value;
   toast(name+' assigned to '+sel.value);
+  if(typeof persistDB==='function') persistDB();
   openCustomerDetail(name);
 }
-function updateCustomerStatus(name,val){ const c=DB.customers.find(x=>x.name===name); c.status=val; toast(name+' set to '+val); }
+function updateCustomerStatus(name,val){ const c=DB.customers.find(x=>x.name===name); c.status=val; toast(name+' set to '+val); if(typeof persistDB==='function') persistDB(); }
 function assignLeadToCustomer(name){
   const sel = document.getElementById('cd-assign-lead');
   if(!sel.value){ toast('No lead selected'); return; }
   const l = DB.leads.find(x=>x.id===sel.value);
   l.linkedCustomer = name;
   toast(l.company+' assigned to '+name);
+  if(typeof persistDB==='function') persistDB();
   openCustomerDetail(name);
 }
 function openImportLeads(){
@@ -2992,6 +3073,7 @@ function importLeads(){
   closeModal();
   navigate('customers');
   toast(ids.length+' customer(s) imported');
+  if(typeof persistDB==='function') persistDB();
 }
 
 
@@ -3008,9 +3090,15 @@ function renderShipments(){
     '<div style="display:flex; gap:9px; max-width:460px;"><input id="ops-search-input" placeholder="Tracking number, e.g. JAAD/3007/2026/00233" onkeydown="if(event.key===\'Enter\') opsSearchShipment();"><button class="btn btn-primary" onclick="opsSearchShipment()">'+ic('search')+' Search</button></div>'+
     '<div id="ops-search-result"></div></div>';
   if(tab==='bookings'){
-    body = tableWrap(['Tracking no.','Customer','Route','Type','Pickup','Status'],
-      DB.bookings.map(b=>['<span class="mono link-cell" onclick="openShipmentDetail(\''+b.tracking+'\')">'+b.tracking+'</span>', b.customer, b.origin+' \u2192 '+b.destination, badge(b.type,'b-gray'), fmtDateShort(b.pickup),
-        switchSelect(b.status, SHIP_STATUS_OPTS, "updateBookingStatus('"+b.id+"', this.value)", SHIP_STATUS_COLORS)]));
+    body = tableWrap(['Tracking no.','Customer','Route','Type','Pickup','Status','Invoice'],
+      DB.bookings.map(b=>{
+        const inv = DB.invoices.find(x=>x.linkedShipment===b.tracking);
+        const invCell = inv
+          ? '<span class="link-cell" onclick="openInvoiceDetail(\''+inv.no+'\')">'+inv.no+'</span>'+(inv.posted===false?' <span class="badge b-amber" style="font-size:9.5px;">Draft</span>':'')
+          : '<button class="btn btn-sm btn-primary" onclick="issueInvoiceForShipment(\''+b.tracking+'\')">Generate invoice</button>';
+        return ['<span class="mono link-cell" onclick="openShipmentDetail(\''+b.tracking+'\')">'+b.tracking+'</span>', b.customer, b.origin+' \u2192 '+b.destination, badge(b.type,'b-gray'), fmtDateShort(b.pickup),
+          switchSelect(b.status, SHIP_STATUS_OPTS, "updateBookingStatus('"+b.id+"', this.value)", SHIP_STATUS_COLORS), invCell];
+      }));
     body = searchBar + body;
     actions = '<button class="btn" onclick="exportCSV(DB.bookings,[\'tracking\',\'customer\',\'origin\',\'destination\',\'type\',\'status\',\'pickup\',\'weight\',\'value\'],\'bookings.csv\')">'+ic('download')+' Export CSV</button>'+
       '<button class="btn btn-primary" onclick="openNewBooking()">'+ic('plus')+' New booking</button>';
@@ -3042,7 +3130,7 @@ function renderShipments(){
   }
   return viewShell('Shipment Operations','Bookings, dispatch, live tracking and manifests.', tabsBar('shipments',tabs,labels,tab), body, actions);
 }
-function updateBookingStatus(id,val){ const b=DB.bookings.find(x=>x.id===id); b.status=val; toast(b.tracking+' set to '+val); navigate('shipments'); }
+function updateBookingStatus(id,val){ const b=DB.bookings.find(x=>x.id===id); b.status=val; toast(b.tracking+' set to '+val); if(typeof persistDB==='function') persistDB(); navigate('shipments'); }
 function opsSearchShipment(){
   const v = document.getElementById('ops-search-input').value.trim();
   const el = document.getElementById('ops-search-result');
@@ -3053,7 +3141,7 @@ function opsSearchShipment(){
     '<div style="display:flex; justify-content:flex-end; gap:9px; margin-top:12px;"><button class="btn" onclick="downloadShipmentPDF(\''+b.tracking+'\')">'+ic('download')+' Download PDF</button><button class="btn btn-primary" onclick="printSection(document.querySelector(\'#ops-search-result .doc\').innerHTML)">'+ic('printer')+' Print</button></div>';
 }
 function nextStage(s){ return {'Pending':'Assigned','Assigned':'In Transit','In Transit':'Delivered'}[s]; }
-function advanceStage(id){ const b = DB.bookings.find(x=>x.id===id); b.status = nextStage(b.status) || b.status; navigate('shipments'); toast(b.tracking+' moved to '+b.status); }
+function advanceStage(id){ const b = DB.bookings.find(x=>x.id===id); b.status = nextStage(b.status) || b.status; if(typeof persistDB==='function') persistDB(); navigate('shipments'); toast(b.tracking+' moved to '+b.status); }
 
 function doTrack(){
   const v = document.getElementById('track-input').value.trim();
@@ -3069,8 +3157,8 @@ function shipmentDocInner(b){
   const events = DB.trackingEvents[b.id] || [];
   const existingInvoice = DB.invoices.find(x=>x.linkedShipment===b.tracking);
   const senderReceiver = b.senderName ? (
-    '<div class="doc-grid"><div><div class="lbl">Sender</div>'+esc(b.senderName)+'<br>'+esc(b.senderAddress||'')+'<br>'+esc([b.senderCity,b.senderState,b.senderCountry].filter(Boolean).join(', '))+'</div>'+
-    '<div style="text-align:right;"><div class="lbl">Receiver</div>'+esc(b.receiverName||'')+'<br>'+esc(b.receiverAddress||'')+'<br>'+esc([b.receiverCity,b.receiverState,b.receiverCountry].filter(Boolean).join(', '))+'</div></div>'
+    '<div class="doc-grid"><div><div class="lbl">Sender</div>'+esc(b.senderName)+(b.senderPhone?' &middot; '+esc(b.senderPhone):'')+'<br>'+esc(b.senderAddress||'')+'<br>'+esc([b.senderCity,b.senderState,b.senderCountry].filter(Boolean).join(', '))+'</div>'+
+    '<div style="text-align:right;"><div class="lbl">Receiver</div>'+esc(b.receiverName||'')+(b.receiverPhone?' &middot; '+esc(b.receiverPhone):'')+'<br>'+esc(b.receiverAddress||'')+'<br>'+esc([b.receiverCity,b.receiverState,b.receiverCountry].filter(Boolean).join(', '))+'</div></div>'
   ) : '';
   return '<h2>Shipment '+b.tracking+'</h2>'+
     '<div class="doc-route"><div class="pt"><div class="lbl">Picked up from</div><div class="v">'+b.origin+'</div></div><div class="arrow">&#8594;</div><div class="pt" style="text-align:right;"><div class="lbl">Headed to</div><div class="v">'+b.destination+'</div></div></div>'+
@@ -3102,13 +3190,27 @@ function downloadShipmentPDF(tracking){
 function issueInvoiceForShipment(tracking){
   const b = DB.bookings.find(x=>x.tracking===tracking);
   if(DB.invoices.find(x=>x.linkedShipment===tracking)){ toast('An invoice already exists for this shipment'); return; }
-  const no = 'INV-'+pad(SEQ.invoice++,5);
-  DB.invoices.unshift({no, customer:b.customer, amount:b.value, status:'Pending', date:new Date().toISOString().slice(0,10), linkedShipment:tracking,
+  const no = 'INV-'+pad(DB.seq.invoice++,5);
+  DB.invoices.unshift({no, customer:b.customer, amount:b.value, status:'Pending', posted:false, date:new Date().toISOString().slice(0,10), linkedShipment:tracking,
     items:[{desc:b.type+' freight, '+b.origin+' to '+b.destination+' ('+b.tracking+')', amount:b.value}]});
   if(typeof persistDB==='function') persistDB();
   closeModal();
-  toast('Invoice '+no+' issued for '+tracking+', now visible in '+b.customer+'\u2019s account');
+  toast('Invoice '+no+' generated as a draft for '+tracking+' \u2014 post it when ready');
   openInvoiceDetail(no);
+}
+function postInvoice(no){
+  const i = DB.invoices.find(x=>x.no===no);
+  i.posted = true;
+  if(typeof persistDB==='function') persistDB();
+  toast(no+' posted \u2014 now visible in '+i.customer+'\u2019s dashboard');
+  navigate('finance');
+}
+function unpostInvoice(no){
+  const i = DB.invoices.find(x=>x.no===no);
+  i.posted = false;
+  if(typeof persistDB==='function') persistDB();
+  toast(no+' unposted \u2014 hidden from '+i.customer+' again');
+  navigate('finance');
 }
 
 function viewPOD(tracking){
@@ -3165,6 +3267,7 @@ function setReturnStatus(tracking,status){
   const r = DB.returns.find(x=>x.tracking===tracking);
   r.status = status;
   toast(tracking+' return marked '+status);
+  if(typeof persistDB==='function') persistDB();
   navigate('shipments');
 }
 function downloadReturnPDF(tracking){
@@ -3194,6 +3297,7 @@ function submitBooking(){
     destination: document.getElementById('nb-dest').value, type: document.getElementById('nb-type').value, status: 'Pending', pickup: date,
     weight: document.getElementById('nb-weight').value || 'n/a', value: Number(document.getElementById('nb-value').value)||0, notes:'' });
   closeModal(); currentTab.shipments='bookings'; navigate('shipments'); toast('Booking created: '+tracking);
+  if(typeof persistDB==='function') persistDB();
 }
 function openNewManifest(){
   const eligible = DB.bookings.filter(b=>b.status==='Assigned' && b.type==='Haulage');
@@ -3215,6 +3319,7 @@ function submitManifest(){
   DB.manifests.unshift({no:no, date:'2026-08-02', driver:document.getElementById('mn-driver').value, vehicle:document.getElementById('mn-vehicle').value, route:document.getElementById('mn-route').value||'Unspecified route', shipments:checks});
   checks.forEach(tn=>{ const b=DB.bookings.find(x=>x.tracking===tn); if(b) b.status='In Transit'; });
   closeModal(); currentTab.shipments='manifests'; navigate('shipments'); toast('Manifest generated: '+no);
+  if(typeof persistDB==='function') persistDB();
 }
 
 /* ============ FLEET ============ */
@@ -3238,7 +3343,7 @@ function renderFleet(){
   return viewShell('Fleet','Vehicles, maintenance, fuel and insurance.', tabsBar('fleet',tabs,labels,tab), body,
     '<button class="btn btn-primary" onclick="toast(\'Add vehicle form is a stub in this prototype\')">'+ic('plus')+' Add vehicle</button>');
 }
-function updateFleetStatus(plate,val){ const f=DB.fleet.find(x=>x.plate===plate); f.status=val; toast(plate+' set to '+val); }
+function updateFleetStatus(plate,val){ const f=DB.fleet.find(x=>x.plate===plate); f.status=val; toast(plate+' set to '+val); if(typeof persistDB==='function') persistDB(); }
 
 /* ============ DRIVER MANAGEMENT ============ */
 const DRIVER_STATUS_OPTS=['Available','On trip','Off duty'];
@@ -3270,7 +3375,7 @@ function setDriverRating(name,n){
   toast(name+' rated '+n+' stars');
   navigate('drivers');
 }
-function updateDriverStatus(name,val){ const d=DB.drivers.find(x=>x.name===name); d.status=val; toast(name+' set to '+val); navigate('drivers'); }
+function updateDriverStatus(name,val){ const d=DB.drivers.find(x=>x.name===name); d.status=val; toast(name+' set to '+val); if(typeof persistDB==='function') persistDB(); navigate('drivers'); }
 
 /* ============ WAREHOUSE ============ */
 const STOCK_STATUS_OPTS=['In stock','Low stock'];
@@ -3278,14 +3383,14 @@ function renderWarehouse(){
   const body = tableWrap(['SKU','Item','Quantity','Reorder level','Location','Status'], DB.inventory.map(i=>[i.sku,i.name,i.qty,i.reorder,i.loc, switchSelect(i.status,STOCK_STATUS_OPTS,"updateStockStatus('"+i.sku+"', this.value)")]));
   return viewShell('Warehouse','Inventory and stock levels. Purchase orders now live in Finance.', '', body, '');
 }
-function updateStockStatus(sku,val){ const i=DB.inventory.find(x=>x.sku===sku); i.status=val; toast(sku+' set to '+val); }
+function updateStockStatus(sku,val){ const i=DB.inventory.find(x=>x.sku===sku); i.status=val; toast(sku+' set to '+val); if(typeof persistDB==='function') persistDB(); }
 
 
 /* ============ HR & CAREERS ============ */
 const RECRUIT_STAGE_OPTS=['Screening','Interview','Offer'];
 const RECRUIT_STAGE_COLORS={'Screening':'#2563c7','Interview':'#ca8a04','Offer':'#1f9d5c'};
 const EMPLOYEE_STATUS_OPTS = ['Active','On leave','Sacked'];
-function updateEmployeeStatus(name,val){ const e=DB.employees.find(x=>x.name===name); e.status=val; toast(name+' set to '+val); navigate('hr'); }
+function updateEmployeeStatus(name,val){ const e=DB.employees.find(x=>x.name===name); e.status=val; toast(name+' set to '+val); if(typeof persistDB==='function') persistDB(); navigate('hr'); }
 function renderHR(){
   const tab=currentTab.hr||'employees';
   const tabs=['employees','recruitment','postings','leave','eoy'];
@@ -3339,6 +3444,7 @@ function saveJobPosting(){
   if(!title || !location){ toast('Add a title and location'); return; }
   DB.jobPostings.unshift({title, location, type, desc});
   toast('Role posted, now live on the website');
+  if(typeof persistDB==='function') persistDB();
   closeModal();
   currentTab.hr='postings';
   navigate('hr');
@@ -3347,6 +3453,7 @@ function saveJobPosting(){
 function removeJobPosting(i){
   DB.jobPostings.splice(i,1);
   toast('Posting removed');
+  if(typeof persistDB==='function') persistDB();
   navigate('hr');
   renderPublicCareers();
 }
@@ -3354,6 +3461,7 @@ function voteEmployee(name){
   const e = DB.employees.find(x=>x.name===name);
   e.eoyVotes = (e.eoyVotes||0) + 1;
   toast('Vote counted for '+name);
+  if(typeof persistDB==='function') persistDB();
   navigate('hr');
 }
 function openOfferLetter(name){
@@ -3373,8 +3481,8 @@ function printOfferLetter(name){
   const e = DB.employees.find(x=>x.name===name);
   printSection('<h2>Offer letter</h2><div class="doc-grid"><div><div class="lbl">Employee</div>'+esc(e.name)+'</div><div style="text-align:right;"><div class="lbl">Start date</div>'+e.hired+'</div></div><div style="font-size:12.6px; margin-top:10px;"><p>Dear '+esc(e.name)+',</p><p>We are pleased to offer you the position of '+e.role+' in the '+e.dept+' department at JAAD Logistics Ltd, starting '+e.hired+'.</p><p>Please review the terms of employment and reply to confirm your acceptance.</p><p>Regards,<br>HR, JAAD Logistics Ltd</p></div><div class="doc-sign"><div class="line">Employer signature</div><div class="line">Employee signature</div></div>');
 }
-function updateApplicantStage(i,val){ DB.applicants[i].stage=val; toast(DB.applicants[i].name+' moved to '+val); }
-function setLeave(i,status){ DB.leave[i].status=status; navigate('hr'); toast('Leave request '+status.toLowerCase()); openLeaveLetter(i); }
+function updateApplicantStage(i,val){ DB.applicants[i].stage=val; toast(DB.applicants[i].name+' moved to '+val); if(typeof persistDB==='function') persistDB(); }
+function setLeave(i,status){ DB.leave[i].status=status; if(typeof persistDB==='function') persistDB(); navigate('hr'); toast('Leave request '+status.toLowerCase()); openLeaveLetter(i); }
 function openApplyLeave(){
   const empOptions = DB.employees.map(e=>'<option>'+esc(e.name)+'</option>').join('');
   openModal('<div class="modal-head"><h3>Apply for leave</h3><button class="x-btn" onclick="closeModal()">'+ic('x')+'</button></div>'+
@@ -3399,6 +3507,7 @@ function saveLeaveApplication(){
   if(!from || !to){ toast('Add a start and end date'); return; }
   DB.leave.unshift({name, type, from, to, status:'Requested', reason: reason || 'No reason given.', requestedOn: new Date().toISOString().slice(0,10)});
   toast('Leave application submitted for '+name);
+  if(typeof persistDB==='function') persistDB();
   closeModal();
   currentTab.hr='leave';
   navigate('hr');
@@ -3511,7 +3620,7 @@ function renderSupport(){
   }
   return viewShell('Support','Tickets, live chat and knowledge base.', tabsBar('support',tabs,labels,tab), body, actions);
 }
-function updateTicket(i,field,val){ DB.tickets[i][field]=val; if(field==='status'&&val==='Resolved') DB.tickets[i].closed=nowStamp(); toast(DB.tickets[i].id+' '+field+' set to '+val); currentTab.support='tickets'; navigate('support'); }
+function updateTicket(i,field,val){ DB.tickets[i][field]=val; if(field==='status'&&val==='Resolved') DB.tickets[i].closed=nowStamp(); toast(DB.tickets[i].id+' '+field+' set to '+val); if(typeof persistDB==='function') persistDB(); currentTab.support='tickets'; navigate('support'); }
 
 function renderChatShell(){
   const filtered = DB.chats.filter(c=>c.status===chatListFilter);
@@ -3558,7 +3667,7 @@ function setChatStatus(id,status){
   chat.status = status;
   if(status==='Pending' && !chat.ticketId){
     const last = chat.messages.filter(m=>m.from==='visitor').slice(-1)[0];
-    const t = {id:'TCK-'+pad(SEQ.ticket++,4), customer:chat.visitor, subject:'Live chat: '+(last?last.text.slice(0,60):'Escalated conversation'), priority:'Medium', status:'Open', channel:'Live chat', opened:nowStamp(), closed:''};
+    const t = {id:'TCK-'+pad(DB.seq.ticket++,4), customer:chat.visitor, subject:'Live chat: '+(last?last.text.slice(0,60):'Escalated conversation'), priority:'Medium', status:'Open', channel:'Live chat', opened:nowStamp(), closed:''};
     DB.tickets.unshift(t);
     chat.ticketId = t.id;
     toast('Moved to pending, ticket '+t.id+' created');
@@ -3629,6 +3738,7 @@ function sendTeamChat(){
   const myName = (currentUser && currentUser.name) || 'You';
   const now = new Date();
   DB.teamChat.push({who:myName, text:val, time:pad(now.getHours(),2)+':'+pad(now.getMinutes(),2)});
+  if(typeof persistDB==='function') persistDB();
   navigate('support');
   const box = document.getElementById('team-chat-msgs');
   if(box) box.scrollTop = box.scrollHeight;
@@ -3642,6 +3752,7 @@ function sendTeamChatFile(input){
   reader.onload = e=>{
     const now = new Date();
     DB.teamChat.push({who:myName, text:'', img:e.target.result, fileName:file.name, time:pad(now.getHours(),2)+':'+pad(now.getMinutes(),2)});
+    if(typeof persistDB==='function') persistDB();
     navigate('support');
   };
   reader.readAsDataURL(file);
@@ -3655,6 +3766,7 @@ function saveKB(){
   const q=document.getElementById('kb-q').value.trim(), a=document.getElementById('kb-a').value.trim();
   if(!q||!a){ toast('Both question and answer are needed'); return; }
   DB.kb.unshift({q,a});
+  if(typeof persistDB==='function') persistDB();
   closeModal(); currentTab.support='kb'; navigate('support'); toast('Article added');
 }
 
@@ -3728,6 +3840,7 @@ function saveAnnouncement(){
   if(!title || !body){ toast('Add a title and a message'); return; }
   DB.announcements.unshift({id:'an'+Date.now(), title, body, date: fmtDateShort(new Date().toISOString().slice(0,10))});
   toast('Announcement posted, customers will see it on their dashboard');
+  if(typeof persistDB==='function') persistDB();
   closeModal();
   currentTab.admin='announcements';
   navigate('admin');
@@ -3735,6 +3848,7 @@ function saveAnnouncement(){
 function removeAnnouncement(i){
   DB.announcements.splice(i,1);
   toast('Announcement removed');
+  if(typeof persistDB==='function') persistDB();
   navigate('admin');
 }
 function openEditRoleAccess(ri){
@@ -3747,6 +3861,7 @@ function openEditRoleAccess(ri){
 function saveRoleAccess(ri){
   const checked = Array.from(document.querySelectorAll('.edit-perm-check:checked')).map(c=>c.value);
   DB.roles[ri].perms = checked;
+  if(typeof persistDB==='function') persistDB();
   closeModal();
   navigate('admin'); currentTab.admin='roles'; navigate('admin');
   toast(DB.roles[ri].role+' access updated');
@@ -3755,6 +3870,7 @@ function toggleRolePerm(ri,key,checked){
   const perms = DB.roles[ri].perms;
   if(checked){ if(!perms.includes(key)) perms.push(key); }
   else { const idx=perms.indexOf(key); if(idx>-1) perms.splice(idx,1); }
+  if(typeof persistDB==='function') persistDB();
 }
 function openAddUser(){
   openModal('<div class="modal-head"><h3>Add user</h3><button class="x-btn" onclick="closeModal()">'+ic('x')+'</button></div>'+
@@ -3766,9 +3882,10 @@ function saveUser(){
   const name=document.getElementById('au-name').value.trim(), email=document.getElementById('au-email').value.trim(), role=document.getElementById('au-role').value;
   if(!name||!email){ toast('Name and email are required'); return; }
   DB.users.unshift({name,email,role,status:'Active'});
+  if(typeof persistDB==='function') persistDB();
   closeModal(); currentTab.admin='users'; navigate('admin'); toast('User added: '+name);
 }
-function updateUserStatus(i,val){ DB.users[i].status=val; toast(DB.users[i].name+' set to '+val); }
+function updateUserStatus(i,val){ DB.users[i].status=val; toast(DB.users[i].name+' set to '+val); if(typeof persistDB==='function') persistDB(); }
 
 /* ============ RENDERER REGISTRY + INIT ============ */
 RENDERERS.dashboard = renderDashboard;
@@ -3845,7 +3962,7 @@ function renderCustSidebar(){
     h += '<a class="nav-item'+(custView===it.k?' active':'')+'" onclick="custNavigate(\''+it.k+'\')">'+ic(it.icon)+'<span>'+it.label+'</span></a>';
   });
   h += '<a class="nav-item" onclick="openCalculator()">'+ic('calc')+'<span>Calculator</span></a>';
-  h += '</nav><div class="sidebar-foot">JAAD Logistics Ltd<br>Lagos, Nigeria &middot; est. 2018<br>Prototype build, sample data only</div>';
+  h += '</nav><div class="sidebar-foot">JAAD Logistics Ltd<br>Lagos, Nigeria &middot; est. 2018<br>Prototype build, sample data only<br><b style="color:var(--red);">Build 17</b></div>';
   document.getElementById('csidebar').innerHTML = h;
 }
 function renderCustTopbar(){
@@ -3868,7 +3985,7 @@ function toggleCustTheme(){
 }
 
 function myBookings(){ return DB.bookings.filter(b=>b.customer===custName); }
-function myInvoices(){ return DB.invoices.filter(i=>i.customer===custName); }
+function myInvoices(){ return DB.invoices.filter(i=>i.customer===custName && i.posted!==false); }
 function myTickets(){ return DB.tickets.filter(t=>t.customer===custName); }
 
 function custViewOverview(){
@@ -3906,8 +4023,9 @@ function openCustBookShipment(){
     '<div class="form-section-title">Sender</div>'+
     '<div class="field-row">'+
       '<div class="field"><label>Full name</label><input id="cb-s-name"></div>'+
-      '<div class="field"><label>Address</label><input id="cb-s-address"></div>'+
+      '<div class="field"><label>Phone number</label><input id="cb-s-phone" type="tel"></div>'+
     '</div>'+
+    '<div class="field"><label>Address</label><input id="cb-s-address"></div>'+
     '<div class="field-row">'+
       '<div class="field"><label>City</label><input id="cb-s-city"></div>'+
       '<div class="field"><label>State</label><input id="cb-s-state"></div>'+
@@ -3916,8 +4034,9 @@ function openCustBookShipment(){
     '<div class="form-section-title">Receiver</div>'+
     '<div class="field-row">'+
       '<div class="field"><label>Full name</label><input id="cb-r-name"></div>'+
-      '<div class="field"><label>Address</label><input id="cb-r-address"></div>'+
+      '<div class="field"><label>Phone number</label><input id="cb-r-phone" type="tel"></div>'+
     '</div>'+
+    '<div class="field"><label>Address</label><input id="cb-r-address"></div>'+
     '<div class="field-row">'+
       '<div class="field"><label>City</label><input id="cb-r-city"></div>'+
       '<div class="field"><label>State</label><input id="cb-r-state"></div>'+
@@ -3938,11 +4057,13 @@ function openCustBookShipment(){
 }
 function custSubmitBooking(){
   const senderName = document.getElementById('cb-s-name').value.trim() || custName;
+  const senderPhone = document.getElementById('cb-s-phone').value.trim();
   const senderAddress = document.getElementById('cb-s-address').value.trim();
   const senderCity = document.getElementById('cb-s-city').value.trim() || '\u2014';
   const senderState = document.getElementById('cb-s-state').value.trim();
   const senderCountry = document.getElementById('cb-s-country').value.trim() || 'Nigeria';
   const receiverName = document.getElementById('cb-r-name').value.trim();
+  const receiverPhone = document.getElementById('cb-r-phone').value.trim();
   const receiverAddress = document.getElementById('cb-r-address').value.trim();
   const receiverCity = document.getElementById('cb-r-city').value.trim();
   const receiverState = document.getElementById('cb-r-state').value.trim();
@@ -3969,8 +4090,8 @@ function custSubmitBooking(){
   const tracking = trackingNumber(pickup);
   DB.bookings.unshift({
     id:'s'+(DB.bookings.length+1)+Date.now(), tracking, customer:custName, origin, destination, type, status:'Pending', pickup, weight, value, notes,
-    senderName, senderAddress, senderCity, senderState, senderCountry,
-    receiverName, receiverAddress, receiverCity, receiverState, receiverCountry
+    senderName, senderPhone, senderAddress, senderCity, senderState, senderCountry,
+    receiverName, receiverPhone, receiverAddress, receiverCity, receiverState, receiverCountry
   });
   toast('Shipment booked \u2014 '+tracking);
   pushNotification('New booking from '+custName+': '+tracking);
@@ -3997,6 +4118,7 @@ function custMyChat(){
   if(!chat){
     chat = {id:'cw'+Date.now(), visitor:custName, status:'Open', ticketId:null, waitingForAgent:false, messages:[]};
     DB.chats.unshift(chat);
+    if(typeof persistDB==='function') persistDB();
   }
   return chat;
 }
