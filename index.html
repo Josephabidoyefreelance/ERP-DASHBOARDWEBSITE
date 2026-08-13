@@ -63,13 +63,13 @@ header{
   border-bottom:1px solid #232327;
 }
 .nav{display:flex; align-items:center; justify-content:space-between; height:76px;}
-.brand{display:flex; align-items:center; gap:10px;}
+.brand{display:flex; align-items:center; gap:10px; margin-left:12px;}
 .brand img{height:34px; width:auto;}
-.navlinks{display:flex; align-items:center; gap:34px;}
+.navlinks{display:flex; align-items:center; gap:20px;}
 .navlinks a{font-size:14px; font-weight:600; color:#c9c9cd; position:relative; padding:4px 0;}
 .navlinks a:hover{color:#ff5c53;}
 .navcta{display:flex; align-items:center; gap:10px;}
-.admin-link{background:none; border:1px solid #3a3a40; color:#c9c9cd; font-size:12px; font-weight:700; padding:9px 16px; border-radius:2px; letter-spacing:.02em;}
+.admin-link{margin-left:18px; background:none; border:1px solid #3a3a40; color:#c9c9cd; font-size:12px; font-weight:700; padding:9px 16px; border-radius:2px; letter-spacing:.02em;}
 .admin-link:hover{border-color:var(--red); color:#fff; background:rgba(229,35,27,.1);}
 .admin-link:hover{color:#fff;}
 .btn{
@@ -219,6 +219,7 @@ section{padding:88px 0;}
 footer{background:var(--ink); color:#fff; padding:44px 0 26px;}
 .footer-top{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px;}
 .footer-left{display:flex; align-items:center; gap:18px; flex-wrap:wrap;}
+.footer-left > .brand{margin-left:0;}
 .footer-links{display:flex; gap:26px; flex-wrap:wrap; justify-content:center;}
 .footer-links a{font-size:13px; color:#a8a8ad;}
 .footer-links a:hover{color:#fff;}
@@ -529,6 +530,34 @@ tbody tr:hover{background:var(--surface-2);}
 .conv-controls{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;}
 .conv-controls select{border:1px solid var(--border); padding:9px 12px; border-radius:2px; font-size:13px; background:var(--surface); color:var(--text);}
 
+  /* EMAIL — added only for the new Email tab */
+  .email-module{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;}
+  .email-tabs{display:flex; gap:4px; padding:12px; border-bottom:1px solid var(--border); background:var(--surface2);}
+  .email-tabs button{border:1px solid var(--border); background:var(--surface); color:var(--text-dim); padding:8px 14px; border-radius:20px; font-size:12px; font-weight:700;}
+  .email-tabs button.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .email-compose{padding:20px;}
+  .email-field{display:flex; align-items:center; border-bottom:1px solid var(--border); min-height:48px;}
+  .email-field label{width:62px; color:var(--text-dim); font-size:12px; font-weight:700;}
+  .email-field input{flex:1; border:0; outline:0; background:transparent; color:var(--text); font-size:13px; padding:13px 0;}
+  .email-body-wrap textarea{width:100%; min-height:300px; resize:vertical; border:0; outline:0; background:transparent; color:var(--text); padding:18px 0; font-size:13.5px; line-height:1.7;}
+  .email-compose-actions{display:flex; justify-content:space-between; align-items:center; gap:12px; border-top:1px solid var(--border); padding-top:14px; flex-wrap:wrap;}
+  .email-note{margin-top:12px; font-size:10.5px; color:var(--text-faint); font-family:var(--font-b);}
+  .email-list{padding:18px;}
+  .email-list-title{font-family:var(--font-d); font-weight:700; font-size:15px; margin-bottom:10px;}
+  .email-row{display:grid; grid-template-columns:1fr auto 90px; align-items:center; gap:14px; padding:14px 4px; border-bottom:1px solid var(--border);}
+  .email-row strong{display:block; font-size:12.5px;}
+  .email-row span:not(.email-status){display:block; color:var(--text-dim); font-size:12px; margin-top:3px;}
+  .email-row small{color:var(--text-faint); font-size:10.5px; text-align:right;}
+  .email-status{font-size:10px; font-weight:700; padding:4px 8px; border-radius:999px;}
+  .email-status.ok{background:var(--green-dim); color:var(--green);}
+  .email-status.sent{background:var(--blue-dim); color:var(--blue);}
+  .email-status.draft{background:var(--gray-dim); color:var(--text-dim);}
+  @media(max-width:620px){
+    .email-compose{padding:14px;}
+    .email-row{grid-template-columns:1fr auto;}
+    .email-row small{display:none;}
+  }
+
 @media (max-width:1000px){
   .kpi-grid{grid-template-columns:repeat(2,1fr);}
   .two-col{grid-template-columns:1fr;}
@@ -599,6 +628,12 @@ tbody tr:hover{background:var(--surface-2);}
   .nav-item:hover{background:#151515; color:#fff;}
   .nav-item.active{background:var(--sidebar-active); color:#fff; border-color:rgba(226,54,43,.4);}
   .nav-item.active svg{color:var(--red);}
+  .nav-sublist{display:flex; flex-direction:column; gap:2px; margin:0 0 6px 27px; padding-left:8px; border-left:1px solid var(--sidebar-border);}
+  .nav-subitem{display:flex; align-items:center; gap:9px; padding:7px 10px; border-radius:var(--radius-sm); color:var(--sidebar-text-dim); font-size:12.5px; cursor:pointer; border:1px solid transparent;}
+  .nav-subitem:hover{background:#151515; color:#fff;}
+  .nav-subitem.active{color:#fff; background:var(--sidebar-active); border-color:rgba(226,54,43,.25);}
+  .nav-subitem svg{width:14px; height:14px; flex-shrink:0;}
+  .support-chevron{margin-left:auto; font-size:11px; opacity:.7;}
   .sidebar-foot{padding:12px 18px 16px; border-top:1px solid var(--sidebar-border); font-size:10px; color:var(--sidebar-text-dim); line-height:1.5;}
   .preview-banner{background:var(--red); color:#fff; font-size:11.5px; padding:8px 14px; display:flex; align-items:center; justify-content:space-between; gap:8px;}
   .preview-banner button{background:rgba(255,255,255,.2); border:none; color:#fff; border-radius:6px; padding:3px 9px; font-size:11px; font-weight:600;}
@@ -845,7 +880,7 @@ tbody tr:hover{background:var(--surface-2);}
       <a href="#coverage">Coverage</a>
       <a href="#track">Track</a>
       <a href="#about">About</a>
-      <a href="mailto:info@jaadlogistics.com?subject=Career%20interest">Careers</a>
+      <a href="#careers">Careers</a>
       <a href="#contact">Contact</a>
     </nav>
     <div class="navcta">
@@ -1000,6 +1035,8 @@ tbody tr:hover{background:var(--surface-2);}
 </section>
 
 
+
+
 <section id="contact">
   <div class="wrap contact-grid">
     <div>
@@ -1062,7 +1099,7 @@ tbody tr:hover{background:var(--surface-2);}
         </div>
       </div>
       <div class="footer-links">
-        <a href="mailto:info@jaadlogistics.com?subject=Career%20interest">Careers</a>
+        <a href="#careers">Careers</a>
         <a href="#privacy" data-legal="privacy">Privacy policy</a>
         <a href="#terms" data-legal="terms">Terms of service</a>
         <a href="#fraud" data-legal="fraud">Fraud awareness</a>
@@ -1840,6 +1877,14 @@ const DB = {
     {t:'Invoice INV-00407 overdue by 4 days', time:'3h ago'},
     {t:'New lead: Kaduna AutoParts Hub requested a quote', time:'5h ago'}
   ],
+  emails:[],
+  emailTemplates:[
+    {id:'tpl1', name:'Invoice Sent', subject:'Invoice {{invoice}} from JAAD Logistics', body:'Hello {{customer}},\n\nPlease find your invoice {{invoice}} attached/available in your JAAD account.\n\nRegards,\nJAAD Logistics Ltd'},
+    {id:'tpl2', name:'Shipment Update', subject:'Shipment update {{tracking}}', body:'Hello {{customer}},\n\nYour shipment {{tracking}} has been updated.\n\nRegards,\nJAAD Logistics Ltd'}
+  ],
+  smsMessages:[],
+  calls:[],
+  whatsappMessages:[],
   tasks:[
     {id:1, t:'Call Arbico PLC re: recurring haulage contract', done:false},
     {id:2, t:'Approve Grace Adeyemi leave request', done:false},
@@ -2132,6 +2177,44 @@ window.addEventListener('storage', e=>{
 // of the old bug's risk
 setInterval(()=>{ if(loadPersistedDB()){ reconcileSequences(); rerenderCurrentView(); } }, 2000);
 
+function openJobPostingPDF(index){
+  const j = DB.jobPostings[index];
+  if(!j) return;
+  if(typeof window.jspdf === 'undefined'){ toast('PDF library still loading, please try again'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  const margin = 48;
+  const width = 595.28 - margin * 2;
+  let y = 58;
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(20);
+  doc.text('JAAD LOGISTICS', margin, y);
+  y += 34;
+  doc.setFontSize(16);
+  doc.text(String(j.title || 'Vacancy'), margin, y);
+  y += 24;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  doc.text(String(j.location || '' ) + '  |  ' + String(j.type || ''), margin, y);
+  y += 30;
+  doc.setDrawColor(220,220,220);
+  doc.line(margin, y, margin + width, y);
+  y += 26;
+  doc.setFontSize(11);
+  const text = String(j.desc || '');
+  const lines = doc.splitTextToSize(text, width);
+  doc.text(lines, margin, y);
+  y += lines.length * 16 + 34;
+  doc.setFont('helvetica','bold');
+  doc.text('How to apply', margin, y);
+  y += 18;
+  doc.setFont('helvetica','normal');
+  doc.text('Send your CV to info@jaadlogistics.com with the vacancy title as the subject.', margin, y, {maxWidth: width});
+  const blobUrl = doc.output('bloburl');
+  const win = window.open(blobUrl, '_blank', 'noopener,noreferrer');
+  if(!win) toast('Please allow pop-ups to view the vacancy PDF');
+}
+
 function renderPublicCareers(){
   const panel = document.getElementById('careersPanel');
   if(!panel) return;
@@ -2139,7 +2222,7 @@ function renderPublicCareers(){
     panel.innerHTML = '<h3>No open roles listed right now</h3><p>We\'re not fabricating job postings here \u2014 when JAAD Logistics has confirmed openings, they\'ll be listed on this page. In the meantime, send your CV and we\'ll keep it on file.</p><a href="mailto:info@jaadlogistics.com?subject=Career%20interest" class="btn">Send your CV</a>';
     return;
   }
-  panel.innerHTML = DB.jobPostings.map(j=>'<div class="job-card"><div><h3>'+esc(j.title)+'</h3><div class="job-meta">'+esc(j.location)+' &middot; '+esc(j.type)+'</div><p>'+esc(j.desc)+'</p></div><a href="mailto:info@jaadlogistics.com?subject=Application%3A%20'+encodeURIComponent(j.title)+'" class="btn">Apply</a></div>').join('');
+  panel.innerHTML = DB.jobPostings.map((j,i)=>'<div class="job-card" style="cursor:pointer;" onclick="openJobPostingPDF('+i+')"><div><h3>'+esc(j.title)+'</h3><div class="job-meta">'+esc(j.location)+' &middot; '+esc(j.type)+'</div><p>'+esc(j.desc)+'</p></div><a href="mailto:info@jaadlogistics.com?subject=Application%3A%20'+encodeURIComponent(j.title)+'" class="btn" onclick="event.stopPropagation()">Apply</a></div>').join('');
 }
 renderPublicCareers();
 
@@ -2150,6 +2233,7 @@ let currentTab={};
 let theme='light';
 let soundOn=true;
 let previewRole=null; // when set, sidebar filters to that role's perms
+let supportMenuOpen=false;
 
 /* ============ NAV CONFIG ============ */
 const NAV_ALL = [
@@ -2171,6 +2255,10 @@ const NAV_ALL = [
   ]},
   {sec:'Service & Insight', items:[
     {k:'support', label:'Support', icon:'headset'},
+    {k:'email', label:'Email', icon:'mail'},
+    {k:'sms', label:'SMS', icon:'message'},
+    {k:'call', label:'Call', icon:'phone'},
+    {k:'whatsapp', label:'WhatsApp', icon:'whatsapp'},
     {k:'reports', label:'Reports', icon:'chart'}
   ]},
   {sec:'System', items:[
@@ -2201,9 +2289,29 @@ function renderSidebar(){
   }
   h += '<div class="brand"><img src="'+LOGO_SRC+'" alt="JAAD Logistics"><div><div class="brand-word">JAAD ERP</div><div class="brand-sub">Operations</div></div></div><nav class="navlist">';
   const needsAttention = (typeof DB!=='undefined' && DB.chats) ? DB.chats.filter(c=>c.status==='Open'||c.status==='Pending').length : 0;
+  const commKeys=['email','sms','call','whatsapp'];
   nav.forEach(group=>{
     h += '<div class="nav-group-label">'+group.sec+'</div>';
     group.items.forEach(it=>{
+      if(commKeys.includes(it.k)) return;
+      if(it.k==='support'){
+        const onclick="toggleSupportMenu()";
+        const badge = needsAttention>0 ? '<span class="nav-badge">'+needsAttention+'</span>' : '';
+        h += '<a class="nav-item'+(currentView==='support'||commKeys.includes(currentView)&&supportMenuOpen?' active':'')+'" onclick="'+onclick+'">'+ic(it.icon)+'<span>'+it.label+'</span>'+badge+'<span class="support-chevron">'+(supportMenuOpen?'▾':'▸')+'</span></a>';
+        if(supportMenuOpen){
+          const allowedItems=group.items.filter(x=>commKeys.includes(x.k));
+          const liveChatAllowed = !previewRole || (DB.roles.find(r=>r.role===previewRole)?.perms||[]).includes('support');
+          h += '<div class="nav-sublist">';
+          if(liveChatAllowed){
+            h += '<a class="nav-subitem'+(currentView==='support'&&currentTab.support==='chat'?' active':'')+'" onclick="currentTab.support=\'chat\'; navigate(\'support\')">'+ic('message')+'<span>Live Chat</span></a>';
+          }
+          allowedItems.forEach(sub=>{
+            h += '<a class="nav-subitem'+(currentView===sub.k?' active':'')+'" onclick="navigate(\''+sub.k+'\')">'+ic(sub.icon)+'<span>'+sub.label+'</span></a>';
+          });
+          h += '</div>';
+        }
+        return;
+      }
       const onclick = it.k==='calculator' ? 'openCalculator()' : "navigate('"+it.k+"')";
       const badge = (it.k==='support' && needsAttention>0) ? '<span class="nav-badge">'+needsAttention+'</span>' : '';
       h += '<a class="nav-item'+(currentView===it.k?' active':'')+'" onclick="'+onclick+'">'+ic(it.icon)+'<span>'+it.label+'</span>'+badge+'</a>';
@@ -2212,6 +2320,11 @@ function renderSidebar(){
   h += '</nav><div class="sidebar-foot">JAAD Logistics Ltd<br>Lagos, Nigeria &middot; est. 2018<br>Prototype build, sample data only<br><b style="color:var(--red);">Build 17</b></div>';
   document.getElementById('sidebar').innerHTML = h;
 }
+function toggleSupportMenu(){
+  supportMenuOpen=!supportMenuOpen;
+  renderSidebar();
+}
+
 function findLabel(k){ for(const g of NAV_ALL){ for(const it of g.items){ if(it.k===k) return it.label; } } return ''; }
 function renderTopbar(){
   const unread = DB.notifications.length;
@@ -3578,6 +3691,146 @@ function uploadEmployeePhoto(input,name){
 }
 
 
+/* ============ COMMUNICATION CENTER ============ */
+let communicationTab='inbox';
+let communicationChannel='email';
+let selectedEmailId=null;
+let activeWhatsappId=null;
+let activeCallId=null;
+
+function commCustomerOptions(){
+  return (DB.customers||[]).map(c=>'<option value="'+esc(c.email||'')+'">'+esc(c.name||'')+' — '+esc(c.email||'')+'</option>').join('');
+}
+function commInvoiceOptions(){
+  return '<option value="">No invoice link</option>'+(DB.invoices||[]).map(i=>'<option value="'+esc(i.no)+'">'+esc(i.no)+' — '+esc(i.customer)+' — '+fmtNaira(i.amount)+'</option>').join('');
+}
+function renderEmailView(){
+  const tabs=['inbox','compose','sent','drafts','templates'];
+  const labels={inbox:'Inbox',compose:'Compose',sent:'Sent',drafts:'Drafts',templates:'Templates'};
+  let body='';
+  if(communicationTab==='compose') body=renderEmailComposeFull();
+  else if(communicationTab==='templates') body=renderEmailTemplates();
+  else body=renderEmailMessages(communicationTab);
+  return viewShell('Email','Send, receive, organize and manage email without leaving the ERP.',communicationTabsBar('email',tabs,labels,communicationTab),body,
+    '<button class="btn btn-primary" onclick="setCommunicationTab(\'email\',\'compose\')">'+ic('plus')+' Compose Email</button>');
+}
+function setCommunicationTab(channel,tab){ communicationChannel=channel; communicationTab=tab; navigate(channel); }
+function communicationTabsBar(view,tabs,labels,active){ return '<div class="tabs">'+tabs.map(t=>'<div class="tab'+(t===active?' active':'')+'" onclick="setCommunicationTab(\''+view+'\',\''+t+'\')">'+labels[t]+'</div>').join('')+'</div>'; }
+function renderEmailComposeFull(){
+  return '<div class="card">'+
+    '<div class="card-title" style="margin-bottom:14px;">Compose email<small>Send from inside JAAD ERP</small></div>'+ 
+    '<div class="grid g-2">'+
+      '<div class="field"><label>To</label><input id="ce-to" list="ce-contact-list" placeholder="customer@gmail.com"></div>'+ 
+      '<div class="field"><label>Invoice</label><select id="ce-invoice" onchange="applyInvoiceToEmail()">'+commInvoiceOptions()+'</select></div>'+ 
+    '</div>'+ 
+    '<datalist id="ce-contact-list">'+commCustomerOptions()+'</datalist>'+ 
+    '<div class="field"><label>CC</label><input id="ce-cc" placeholder="Optional"></div>'+ 
+    '<div class="field"><label>BCC</label><input id="ce-bcc" placeholder="Optional"></div>'+ 
+    '<div class="field"><label>Template</label><select id="ce-template" onchange="useEmailTemplate(this.value)"><option value="">Choose a template</option>'+DB.emailTemplates.map(t=>'<option value="'+esc(t.id)+'">'+esc(t.name)+'</option>').join('')+'</select></div>'+ 
+    '<div class="field"><label>Subject</label><input id="ce-subject" placeholder="Subject"></div>'+ 
+    '<div class="field"><label>Message</label><textarea id="ce-body" style="min-height:260px; width:100%; resize:vertical;" placeholder="Write your email..."></textarea></div>'+ 
+    '<div id="ce-attachment-name" class="note"></div>'+ 
+    '<div class="row-actions"><label class="btn" style="cursor:pointer;">'+ic('paperclip')+' Attach file<input id="ce-file" type="file" style="display:none" onchange="showEmailAttachment(this)"></label><button class="btn" onclick="saveEmailDraftFull()">'+ic('save')+' Save Draft</button><button class="btn btn-primary" onclick="sendEmailFull()">'+ic('send')+' Send Email</button></div>'+ 
+    '<div class="note" style="margin-top:12px;">The ERP stores the complete email record and linked invoice. Connect your email API/provider for live delivery.</div>'+ 
+  '</div>';
+}
+function showEmailAttachment(input){ const f=input.files&&input.files[0]; const el=document.getElementById('ce-attachment-name'); if(el) el.textContent=f?'Attached: '+f.name:''; }
+function applyInvoiceToEmail(){
+  const no=document.getElementById('ce-invoice').value; const inv=DB.invoices.find(i=>i.no===no); if(!inv)return;
+  document.getElementById('ce-to').value=(DB.customers.find(c=>c.name===inv.customer)||{}).email||document.getElementById('ce-to').value;
+  document.getElementById('ce-subject').value='Invoice '+inv.no+' from JAAD Logistics';
+}
+function replaceTemplateVars(text, invoice){
+  const inv=invoice||{}; return String(text||'').replace(/{{invoice}}/g,inv.no||'').replace(/{{customer}}/g,inv.customer||'').replace(/{{tracking}}/g,inv.linkedShipment||'');
+}
+function useEmailTemplate(id){
+  const t=DB.emailTemplates.find(x=>x.id===id); if(!t)return;
+  const no=(document.getElementById('ce-invoice')||{}).value; const inv=DB.invoices.find(i=>i.no===no);
+  document.getElementById('ce-subject').value=replaceTemplateVars(t.subject,inv); document.getElementById('ce-body').value=replaceTemplateVars(t.body,inv);
+}
+function readFileAsDataURL(file, cb){ if(!file){cb('');return;} const r=new FileReader(); r.onload=()=>cb(r.result); r.readAsDataURL(file); }
+function saveEmailDraftFull(){
+  const file=document.getElementById('ce-file')?.files?.[0];
+  const make=(attachment)=>{ const e={id:'EM-'+Date.now(),to:document.getElementById('ce-to').value.trim(),cc:document.getElementById('ce-cc').value.trim(),bcc:document.getElementById('ce-bcc').value.trim(),subject:document.getElementById('ce-subject').value.trim(),body:document.getElementById('ce-body').value,invoiceNo:document.getElementById('ce-invoice').value||'',attachment,attachmentName:file?.name||'',status:'Draft',folder:'drafts',date:new Date().toISOString()}; DB.emails.unshift(e); persistDB(); toast('Email saved as draft'); communicationTab='drafts'; navigate('email'); };
+  readFileAsDataURL(file,make);
+}
+function sendEmailFull(){
+  const to=document.getElementById('ce-to').value.trim(), subject=document.getElementById('ce-subject').value.trim(), body=document.getElementById('ce-body').value.trim();
+  if(!to||!subject||!body){toast('Recipient, subject and message are required');return;}
+  const file=document.getElementById('ce-file')?.files?.[0];
+  const make=(attachment)=>{ const e={id:'EM-'+Date.now(),to,cc:document.getElementById('ce-cc').value.trim(),bcc:document.getElementById('ce-bcc').value.trim(),subject,body,invoiceNo:document.getElementById('ce-invoice').value||'',attachment,attachmentName:file?.name||'',status:'Sent',folder:'sent',date:new Date().toISOString()}; DB.emails.unshift(e); persistDB(); toast('Email recorded as sent'); communicationTab='sent'; navigate('email'); };
+  readFileAsDataURL(file,make);
+}
+function renderEmailMessages(tab){
+  let list;
+  if(tab==='inbox') list=DB.emails.filter(e=>e.folder==='inbox'||e.status==='Received');
+  else if(tab==='sent') list=DB.emails.filter(e=>e.folder==='sent'||e.status==='Sent');
+  else list=DB.emails.filter(e=>e.folder==='drafts'||e.status==='Draft');
+  if(!list.length)return '<div class="card"><div class="empty">No '+tab+' emails yet.</div></div>';
+  const title=tab==='inbox'?'Inbox':tab==='sent'?'Sent emails':'Draft emails';
+  return '<div class="card"><div class="card-title" style="margin-bottom:10px;">'+title+'</div>'+list.map(e=>'<button class="email-row" style="width:100%; text-align:left; background:none; border:0; cursor:pointer;" onclick="openEmailDetail(\''+e.id+'\')"><div><strong>'+esc(e.folder==='inbox'?e.from||e.to:e.to)+'</strong><span>'+esc(e.subject)+'</span></div><span class="email-status '+(e.status==='Sent'||e.status==='Received'?'sent':'draft')+'">'+esc(e.status)+'</span><small>'+fmtDateShort(e.date.slice(0,10))+'</small></button>').join('')+'</div>';
+}
+function openEmailDetail(id){
+  const e=DB.emails.find(x=>x.id===id); if(!e)return; selectedEmailId=id;
+  const inv=e.invoiceNo?DB.invoices.find(i=>i.no===e.invoiceNo):null;
+  openModal('<div class="modal-head"><h3>'+esc(e.subject)+'</h3><button class="x-btn" onclick="closeModal()">'+ic('x')+'</button></div>'+ '<div class="modal-body">'+
+    '<div class="doc-grid"><div><div class="lbl">'+(e.folder==='inbox'?'From':'To')+'</div>'+esc(e.folder==='inbox'?e.from||'':e.to)+'</div><div style="text-align:right"><div class="lbl">Status</div>'+esc(e.status)+'</div></div>'+ 
+    '<div class="lbl" style="margin-top:14px">Message</div><div style="white-space:pre-wrap; line-height:1.7; margin-top:6px;">'+esc(e.body)+'</div>'+ 
+    (e.attachment?'<div class="card" style="margin-top:14px;"><div class="card-title">Attachment</div><a class="btn" href="'+e.attachment+'" download="'+esc(e.attachmentName||'attachment')+'">'+ic('download')+' '+esc(e.attachmentName||'Download attachment')+'</a></div>':'')+
+    (inv?'<div class="card" style="margin-top:18px;"><div class="card-title">Linked invoice</div><p style="margin:6px 0;">'+esc(inv.no)+' · '+esc(inv.customer)+' · '+fmtNaira(inv.amount)+'</p><button class="btn btn-primary" onclick="closeModal();openInvoiceDetail(\''+inv.no+'\')">View Invoice</button></div>':'')+ 
+    '</div><div class="modal-foot"><button class="btn" onclick="closeModal()">Close</button>'+(e.status==='Draft'?'<button class="btn btn-primary" onclick="closeModal();editEmailDraft(\''+e.id+'\')">Edit draft</button>':'')+'</div>');
+}
+function editEmailDraft(id){ const e=DB.emails.find(x=>x.id===id); if(!e)return; communicationTab='compose'; navigate('email'); setTimeout(()=>{document.getElementById('ce-to').value=e.to||'';document.getElementById('ce-cc').value=e.cc||'';document.getElementById('ce-bcc').value=e.bcc||'';document.getElementById('ce-subject').value=e.subject||'';document.getElementById('ce-body').value=e.body||'';document.getElementById('ce-invoice').value=e.invoiceNo||'';},0); }
+function renderEmailTemplates(){
+  return '<div class="row-actions" style="margin-bottom:14px;"><button class="btn btn-primary" onclick="createEmailTemplate()">'+ic('plus')+' New template</button></div><div class="grid g-2">'+DB.emailTemplates.map(t=>'<div class="card"><div class="card-title">'+esc(t.name)+'</div><p style="font-weight:700;">'+esc(t.subject)+'</p><p style="white-space:pre-wrap; color:var(--text-dim); font-size:12px;">'+esc(t.body)+'</p><div class="row-actions"><button class="btn btn-sm btn-primary" onclick="useTemplateFromList(\''+t.id+'\')">Use template</button><button class="btn btn-sm" onclick="editEmailTemplate(\''+t.id+'\')">Edit</button></div></div>').join('')+'</div>';
+}
+function useTemplateFromList(id){ communicationTab='compose'; navigate('email'); setTimeout(()=>{document.getElementById('ce-template').value=id;useEmailTemplate(id);},0); }
+function editEmailTemplate(id){ const t=DB.emailTemplates.find(x=>x.id===id); if(!t)return; openModal('<div class="modal-head"><h3>Edit template</h3><button class="x-btn" onclick="closeModal()">'+ic('x')+'</button></div><div class="modal-body"><div class="field"><label>Name</label><input id="et-name" value="'+esc(t.name)+'"></div><div class="field"><label>Subject</label><input id="et-subject" value="'+esc(t.subject)+'"></div><div class="field"><label>Body</label><textarea id="et-body" style="min-height:220px; width:100%;">'+esc(t.body)+'</textarea></div><div class="note">Available variables: {{customer}}, {{invoice}}, {{tracking}}</div></div><div class="modal-foot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveEmailTemplate(\''+t.id+'\')">Save template</button></div>'); }
+function saveEmailTemplate(id){ const t=DB.emailTemplates.find(x=>x.id===id); t.name=document.getElementById('et-name').value.trim();t.subject=document.getElementById('et-subject').value.trim();t.body=document.getElementById('et-body').value;persistDB();closeModal();toast('Template saved');navigate('email'); }
+function createEmailTemplate(){ const id='tpl-'+Date.now(); DB.emailTemplates.push({id,name:'New template',subject:'',body:''});persistDB();editEmailTemplate(id); }
+
+function renderSmsView(){
+  const rows=DB.smsMessages||[]; const tab=['compose','sent'].includes(communicationTab)?communicationTab:'compose';
+  const tabs=['compose','sent']; const labels={compose:'Compose',sent:'Sent'};
+  let body='';
+  if(tab==='sent') body='<div class="card"><div class="card-title">Sent SMS</div>'+(rows.length?rows.map(x=>'<div class="email-row"><div><strong>'+esc(x.to)+'</strong><span>'+esc(x.body)+'</span></div><span class="email-status sent">'+esc(x.status)+'</span><small>'+fmtDateShort(x.date.slice(0,10))+'</small></div>').join(''):'<div class="empty">No SMS sent yet.</div>')+'</div>';
+  else body='<div class="card"><div class="card-title">Send SMS<small>Connect an SMS provider such as Twilio or Termii for live delivery.</small></div><div class="field"><label>To</label><input id="sms-to" placeholder="08061234567"></div><div class="field"><label>Message</label><textarea id="sms-body" maxlength="320" style="min-height:160px;width:100%;" placeholder="Type SMS"></textarea></div><div class="row-actions"><span id="sms-count" class="note">0 / 320</span><button class="btn btn-primary" onclick="sendSmsFull()">'+ic('send')+' Send SMS</button></div></div>';
+  return viewShell('SMS','Send and track SMS from the same ERP.',communicationTabsBar('sms',tabs,labels,tab),body,'<span></span>');
+}
+function sendSmsFull(){const to=document.getElementById('sms-to').value.trim(),body=document.getElementById('sms-body').value.trim();if(!to||!body){toast('Phone number and message are required');return;}DB.smsMessages.unshift({to,body,status:'Sent',date:new Date().toISOString()});persistDB();toast('SMS recorded as sent');communicationTab='sent';navigate('sms');}
+
+function renderCallView(){
+  const tab=['dialer','log'].includes(communicationTab)?communicationTab:'dialer'; const tabs=['dialer','log']; const labels={dialer:'Call',log:'Call log'}; let body='';
+  if(tab==='log'){
+    const rows=DB.calls||[]; body='<div class="card"><div class="card-title">Call log</div>'+(rows.length?rows.map((x,i)=>'<button class="email-row" style="width:100%;text-align:left;background:none;border:0;cursor:pointer;" onclick="openCallLog(\''+x.id+'\')"><div><strong>'+esc(x.number)+'</strong><span>'+esc(x.status)+(x.duration?' · '+esc(x.duration):'')+'</span></div><span class="email-status sent">'+esc(x.result||'Logged')+'</span><small>'+fmtDateShort(x.date.slice(0,10))+'</small></button>').join(''):'<div class="empty">No calls logged yet.</div>')+'</div>';
+  } else {
+    body='<div class="card"><div class="card-title">Internet call<small>Call stays inside the ERP interface. Live internet calling requires a voice/WebRTC provider and signalling service.</small></div><div class="field"><label>Number</label><input id="call-number" placeholder="08061234567"></div><div id="call-screen" style="display:none;margin:14px 0;padding:24px;text-align:center;border:1px solid var(--border);border-radius:10px;background:var(--surface2);"><div style="font-size:28px;font-weight:800;" id="call-screen-number"></div><div id="call-timer" class="note" style="margin:8px 0 16px;">Connecting…</div><button class="btn btn-danger" onclick="endErpCall()">'+ic('phone')+' End call</button></div><div class="row-actions" id="call-actions"><button class="btn btn-primary" onclick="startErpCall()">'+ic('phone')+' Call</button></div></div>';
+  }
+  return viewShell('Call','Make and log customer calls without leaving the ERP.',communicationTabsBar('call',tabs,labels,tab),body,'<span></span>');
+}
+function startErpCall(){const n=document.getElementById('call-number').value.trim();if(!n){toast('Enter a phone number');return;} DB.calls=DB.calls||[]; const id='CALL-'+Date.now(); DB.calls.unshift({id,number:n,status:'In progress',result:'Active',date:new Date().toISOString(),started:Date.now(),duration:'00:00'}); activeCallId=id; persistDB(); document.getElementById('call-screen').style.display='block';document.getElementById('call-actions').style.display='none';document.getElementById('call-screen-number').textContent=n; callTimerTick(); toast('In-app call started');}
+let callTimerHandle=null;
+function callTimerTick(){ clearInterval(callTimerHandle); const tick=()=>{const c=(DB.calls||[]).find(x=>x.id===activeCallId);const el=document.getElementById('call-timer');if(!c||!el)return;const sec=Math.floor((Date.now()-c.started)/1000);c.duration=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');el.textContent='Call in progress · '+c.duration;};tick();callTimerHandle=setInterval(tick,1000);}
+function endErpCall(){const c=(DB.calls||[]).find(x=>x.id===activeCallId);if(!c)return;c.status='Completed';c.result='Completed';c.ended=Date.now();persistDB();clearInterval(callTimerHandle);activeCallId=null;toast('Call ended and saved to call log');communicationTab='log';navigate('call');}
+function openCallLog(id){const c=(DB.calls||[]).find(x=>x.id===id);if(!c)return;openModal('<div class="modal-head"><h3>Call details</h3><button class="x-btn" onclick="closeModal()">'+ic('x')+'</button></div><div class="modal-body"><div class="doc-grid"><div><div class="lbl">Number</div>'+esc(c.number)+'</div><div style="text-align:right"><div class="lbl">Status</div>'+esc(c.status)+'</div></div><p><b>Result:</b> '+esc(c.result||'Logged')+'</p><p><b>Duration:</b> '+esc(c.duration||'00:00')+'</p><p><b>Date:</b> '+esc(c.date)+'</p></div><div class="modal-foot"><button class="btn" onclick="closeModal()">Close</button></div>');}
+
+function renderWhatsappView(){
+  DB.whatsappMessages=DB.whatsappMessages||[];
+  const tab=['compose','log'].includes(communicationTab)?communicationTab:'compose'; const tabs=['compose','log']; const labels={compose:'WhatsApp',log:'Chat log'}; let body='';
+  if(tab==='log'){
+    const groups={}; DB.whatsappMessages.forEach(m=>{const key=m.chatId||m.to||m.from||'Unknown';(groups[key]||(groups[key]=[])).push(m);});
+    const keys=Object.keys(groups); body='<div class="card"><div class="card-title">WhatsApp chat log</div>'+(keys.length?keys.map(k=>'<button class="email-row" style="width:100%;text-align:left;background:none;border:0;cursor:pointer;" onclick="openWhatsappChat(\''+esc(k).replace(/'/g,"\\'")+'\')"><div><strong>'+esc(k)+'</strong><span>'+esc(groups[k][groups[k].length-1].body||groups[k][groups[k].length-1].text||'Attachment')+'</span></div><span class="email-status sent">'+groups[k].length+' msg</span><small>'+fmtDateShort(groups[k][groups[k].length-1].date.slice(0,10))+'</small></button>').join(''):'<div class="empty">No WhatsApp messages yet.</div>')+'</div>';
+  } else {
+    const chat=activeWhatsappId; const msgs=chat?DB.whatsappMessages.filter(m=>(m.chatId||m.to||m.from)===chat):[];
+    body='<div class="card"><div class="card-title">WhatsApp<small>Messages stay inside the ERP. Connect WhatsApp Business Cloud API/webhooks for real inbound and outbound WhatsApp traffic.</small></div><div class="field"><label>To</label><input id="wa-to" value="'+esc(chat||'')+'" placeholder="2348061472153"></div><div id="wa-messages" style="min-height:180px;max-height:320px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:12px;margin:10px 0;">'+(msgs.length?msgs.map(m=>'<div style="margin:7px 0;text-align:'+(m.from==='customer'?'left':'right')+';"><span style="display:inline-block;max-width:80%;padding:8px 11px;border-radius:10px;background:'+(m.from==='customer'?'var(--surface2)':'var(--blue-dim)')+';">'+(m.attachment?'<div>'+ic('paperclip')+' '+esc(m.attachmentName||'Attachment')+'</div>':'')+esc(m.body||m.text||'')+'</span><div class="note">'+esc(m.time||'')+'</div></div>').join(''):'<div class="empty">No messages in this chat yet.</div>')+'</div><div class="field"><label>Message</label><textarea id="wa-body" style="min-height:100px;width:100%;" placeholder="Type WhatsApp message"></textarea></div><div id="wa-attachment-name" class="note"></div><div class="row-actions"><label class="btn" style="cursor:pointer;">'+ic('paperclip')+' Attach file<input id="wa-file" type="file" style="display:none" onchange="showWhatsappAttachment(this)"></label><button class="btn btn-primary" onclick="sendWhatsappFull()">'+ic('send')+' Send WhatsApp</button></div></div>';
+  }
+  return viewShell('WhatsApp','Manage WhatsApp conversations from the ERP.',communicationTabsBar('whatsapp',tabs,labels,tab),body,'<span></span>');
+}
+function showWhatsappAttachment(input){const f=input.files&&input.files[0];const el=document.getElementById('wa-attachment-name');if(el)el.textContent=f?'Attached: '+f.name:'';}
+function sendWhatsappFull(){const n=document.getElementById('wa-to').value.trim(),b=document.getElementById('wa-body').value.trim(),file=document.getElementById('wa-file')?.files?.[0];if(!n||(!b&&!file)){toast('Number and message or attachment are required');return;}const save=(attachment)=>{DB.whatsappMessages.unshift({id:'WA-'+Date.now(),chatId:n,to:n,body:b,attachment,attachmentName:file?.name||'',from:'agent',status:'Sent',date:new Date().toISOString(),time:new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})});persistDB();activeWhatsappId=n;toast('WhatsApp message saved in chat');navigate('whatsapp');};readFileAsDataURL(file,save);}
+function openWhatsappChat(id){activeWhatsappId=id;communicationTab='compose';navigate('whatsapp');}
+function simulateWhatsappReceive(){const n=document.getElementById('wa-to')?.value.trim();if(!n)return;DB.whatsappMessages.unshift({id:'WA-'+Date.now(),chatId:n,from:'customer',to:n,body:'Incoming WhatsApp message',status:'Received',date:new Date().toISOString(),time:new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})});persistDB();navigate('whatsapp');}
+
 /* ============ SUPPORT ============ */
 const TICKET_PRIORITY_OPTS=['Low','Normal','High','Urgent'];
 const TICKET_STATUS_OPTS=['Open','Resolved'];
@@ -3898,6 +4151,10 @@ RENDERERS.warehouse = renderWarehouse;
 RENDERERS.finance = renderFinance;
 RENDERERS.hr = renderHR;
 RENDERERS.support = renderSupport;
+RENDERERS.email = renderEmailView;
+RENDERERS.sms = renderSmsView;
+RENDERERS.call = renderCallView;
+RENDERERS.whatsapp = renderWhatsappView;
 RENDERERS.reports = renderReports;
 RENDERERS.admin = renderAdmin;
 
